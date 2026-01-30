@@ -3,17 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>hizliyim.com - Ultimate System</title>
+    <title>hizliyim.com - Ultimate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <style>
+        :root { --brand: #027AFF; }
+        body { background: #050505; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
+        
+        /* GLOBAL LOADER: Sayfa yüklenene kadar her şeyi kapatır */
+        #global-loader {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        
+        /* Ana İçerik */
+        main { 
+            width: 100%; min-height: 100dvh; /* Mobile viewport fix */
+            display: flex; flex-direction: column; position: relative; z-index: 10;
+        }
+
+        .page-content { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 1.5rem; width: 100%; }
+        .page-center { align-items: center; } /* Login/Register ortalığı için */
+
+        .glass-card { 
+            background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08); border-top: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            width: 100%; position: relative; z-index: 20;
+        }
+
+        .logo-text { font-weight: 900; background: linear-gradient(to right, #fff, #00f3ff, #fff); -webkit-background-clip: text; color: transparent; background-size: 200%; animation: shine 4s linear infinite; letter-spacing: -1px; }
+        @keyframes shine { to { background-position: -200% center; } }
+
+        .input-field { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 14px; border-radius: 14px; width: 100%; outline: none; transition: 0.3s; font-size: 0.9rem; }
+        .input-field:focus { border-color: var(--brand); background: rgba(2,122,255,0.05); }
+        
+        .btn-primary { 
+            background: var(--brand); padding: 14px; border-radius: 14px; width: 100%; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; 
+            position: relative; overflow: hidden; cursor: pointer; transition: 0.2s; border: none; color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(2,122,255,0.3); }
+        .btn-primary::after { content:''; position:absolute; top:0; left:-150%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); transform:skewX(-20deg); animation: btnShine 3s infinite; }
+        @keyframes btnShine { 0%{left:-150%} 20%{left:150%} 100%{left:150%} }
+
+        #particles { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+        .particle { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(60px); opacity: 0.4; animation: float 10s infinite alternate; }
+        @keyframes float { 0% { transform: translate(0,0); } 100% { transform: translate(30px, -30px); } }
+
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .nav-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0.8rem 1rem; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, updateDoc, query, orderBy, serverTimestamp, deleteDoc, where, limit, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, updateDoc, query, orderBy, serverTimestamp, deleteDoc, where, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        const myFirebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyCP0Rd8CAfzYRPtakfdQWBqS5uBn045XpE",
             authDomain: "hizliyimforum.firebaseapp.com",
             databaseURL: "https://hizliyimforum-default-rtdb.firebaseio.com",
@@ -23,416 +77,358 @@
             appId: "1:903963422468:web:936c368393585efd0cea51"
         };
 
-        const app = initializeApp(myFirebaseConfig);
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // CONFIG
         const SUPER_USER = "alicelik";
         const SUPER_PASS = "alikingytyt6565";
         const SECURITY_CODE = "220208İRM";
         const SUPER_EMAIL = "alicelik@hizliyim.com"; 
         const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; 
 
+        // STATE
         let currentUserData = null;
-        let authSettled = false;
+        let appInitialized = false; // BU KİLİT NOKTA
         let debounceTimer;
 
         // --- YARDIMCI FONKSİYONLAR ---
         function formatDate(timestamp) {
-            if(!timestamp) return '-';
-            return new Date(timestamp.seconds * 1000).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute:'2-digit' });
+            if(!timestamp) return '';
+            return new Date(timestamp.seconds * 1000).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
         }
 
         async function logAction(type, uid, email, details = "") {
-            try {
-                await addDoc(collection(db, "logs"), {
-                    type, uid, email, details,
-                    device: navigator.userAgent,
-                    timestamp: serverTimestamp()
-                });
-            } catch(e) { console.error("Log hatası", e); }
-        }
-
-        async function sendNotification(userId, title, message) {
-            try {
-                await addDoc(collection(db, `users/${userId}/notifications`), {
-                    title, message, read: false, timestamp: serverTimestamp()
-                });
-            } catch(e) { console.error(e); }
+            try { await addDoc(collection(db, "logs"), { type, uid, email, details, ua: navigator.userAgent, ts: serverTimestamp() }); } catch(e){}
         }
 
         // --- GLOBAL ACTIONS ---
         window.handleLogout = async () => {
-            try {
-                // Temizlik
-                document.querySelectorAll('input, textarea').forEach(i => i.value = '');
-                document.querySelectorAll('.validation-msg').forEach(e => e.innerText = '');
-                document.querySelectorAll('.input-field').forEach(e => e.classList.remove('!border-red-500', '!border-green-500'));
-                
-                localStorage.removeItem('lastAuthTimestamp');
-                await signOut(auth);
-                // Auth listener login sayfasına atacak
-            } catch(e) { console.error(e); }
+            document.getElementById('global-loader').style.display = 'flex'; // Çıkışta perdeyi indir
+            localStorage.removeItem('lastAuthTimestamp');
+            await signOut(auth);
+            // onAuthStateChanged yönlendirmeyi yapacak
         };
 
-        // Real-time Validation
-        window.validateInput = async (type, el) => {
+        // Input Validation (Kayıt Olurken)
+        window.validateRegister = async (el, type) => {
             clearTimeout(debounceTimer);
             const val = el.value.trim();
             const msgEl = document.getElementById(`${el.id}-msg`);
             
+            el.classList.remove('!border-red-500', '!border-green-500');
+            msgEl.innerText = "";
+
             if(type === 'username') {
                 if(val.length < 4) {
-                    el.classList.add('!border-red-500'); el.classList.remove('!border-green-500');
-                    msgEl.innerText = "Çok kısa balım (min 4)"; msgEl.className = "text-[10px] text-red-400 font-bold ml-1";
+                    el.classList.add('!border-red-500');
+                    msgEl.innerText = "Çok kısa balım (min 4)"; msgEl.className = "text-[10px] text-red-500 font-bold ml-1";
                     return;
                 }
-                if(val.includes(' ')) {
+                if(val.length > 30 || val.includes(' ')) {
                     el.classList.add('!border-red-500');
-                    msgEl.innerText = "Boşluk olmaz balım"; return;
-                }
-                if(val.length > 30) {
-                    el.classList.add('!border-red-500');
-                    msgEl.innerText = "Çok uzun balım (max 30)"; return;
+                    msgEl.innerText = "Boşluksuz ve max 30 karakter"; msgEl.className = "text-[10px] text-red-500 font-bold ml-1";
+                    return;
                 }
                 
-                msgEl.innerText = "Kontrol ediliyor..."; msgEl.className = "text-[10px] text-blue-400 font-bold ml-1";
-                
+                msgEl.innerText = "Kontrol ediyorum..."; msgEl.className = "text-[10px] text-blue-400 font-bold ml-1";
                 debounceTimer = setTimeout(async () => {
                     const q = query(collection(db, "users"), where("username", "==", val));
                     const snap = await getDocs(q);
                     if(!snap.empty) {
-                        el.classList.add('!border-red-500'); el.classList.remove('!border-green-500');
-                        msgEl.innerText = "Bu isim alınmış balım"; msgEl.className = "text-[10px] text-red-400 font-bold ml-1";
+                        el.classList.add('!border-red-500');
+                        msgEl.innerText = "Bu isim dolu balım 😔"; msgEl.className = "text-[10px] text-red-500 font-bold ml-1";
                     } else {
-                        el.classList.remove('!border-red-500'); el.classList.add('!border-green-500');
-                        msgEl.innerHTML = "<span class='text-green-400'>Müsait ✓</span>";
+                        el.classList.add('!border-green-500');
+                        msgEl.innerText = "Müsait ✓"; msgEl.className = "text-[10px] text-green-500 font-bold ml-1";
                     }
                 }, 500);
             }
-            
             if(type === 'password') {
                 if(val.length < 6) {
                     el.classList.add('!border-red-500');
-                    msgEl.innerText = "Çok kısa balım (min 6)"; msgEl.className = "text-[10px] text-red-400 font-bold ml-1";
-                } else {
-                    el.classList.remove('!border-red-500'); el.classList.add('!border-green-500');
-                    msgEl.innerText = "Güçlü ✓"; msgEl.className = "text-[10px] text-green-400 font-bold ml-1";
+                    msgEl.innerText = "Çok kısa (min 6)"; msgEl.className = "text-[10px] text-red-500 font-bold ml-1";
                 }
             }
         };
 
-        // --- POST ACTIONS ---
-        window.toggleReadMore = (id) => {
-            const content = document.getElementById(`post-content-${id}`);
-            const btn = document.getElementById(`read-more-${id}`);
-            if(content.classList.contains('line-clamp-3')) {
-                content.classList.remove('line-clamp-3');
-                btn.innerText = "Kısalt";
-            } else {
-                content.classList.add('line-clamp-3');
-                btn.innerText = "Devamını Oku...";
-            }
-        };
+        // --- CORE LOGIC ---
+        // 1. Initialization Logic (Flicker Killer)
+        onAuthStateChanged(auth, async (user) => {
+            const now = Date.now();
+            const lastAuth = localStorage.getItem('lastAuthTimestamp');
+            const isTimeout = lastAuth && (now - parseInt(lastAuth) > SESSION_TIMEOUT);
 
-        window.votePost = async (postId, type) => {
-            if(!currentUserData) return;
-            const uid = auth.currentUser.uid;
-            const voteRef = doc(db, `pages/${postId}/votes/${uid}`);
-            const postRef = doc(db, "pages", postId);
-
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const voteDoc = await transaction.get(voteRef);
-                    const postDoc = await transaction.get(postRef);
-                    if(!postDoc.exists()) return;
-
-                    let newLikes = postDoc.data().likeCount || 0;
-                    let newDislikes = postDoc.data().dislikeCount || 0;
-
-                    if (voteDoc.exists()) {
-                        const oldType = voteDoc.data().type;
-                        if (oldType === type) return; // Aynı oy, işlem yok
-                        if (oldType === 'like') newLikes--;
-                        else newDislikes--;
+            if (user && !isTimeout) {
+                // User logged in & session valid
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const d = userDoc.data();
+                        
+                        // Ban Check
+                        if (d.bannedUntil && d.bannedUntil.toMillis() > now) {
+                            await signOut(auth);
+                            alert(`BANLANDIN BALIM! ${d.bannedUntil.toDate().toLocaleString()} tarihine kadar giremezsin.`);
+                            currentUserData = null;
+                        } else if (d.username === "DELETED_USER") {
+                            await signOut(auth);
+                            alert("Bu hesap silinmiş.");
+                            currentUserData = null;
+                        } else {
+                            currentUserData = d;
+                            // Update last login silently
+                            updateDoc(doc(db, "users", user.uid), { lastLogin: serverTimestamp() });
+                            if(!lastAuth) localStorage.setItem('lastAuthTimestamp', now.toString());
+                        }
+                    } else if (user.email === SUPER_EMAIL) {
+                        // First time superuser fallback
+                        currentUserData = { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' };
                     }
+                } catch(e) { console.error("Auth Data Error", e); currentUserData = null; }
+            } else {
+                // Not logged in or timeout
+                if (isTimeout) { await signOut(auth); localStorage.removeItem('lastAuthTimestamp'); }
+                currentUserData = null;
+            }
 
-                    if (type === 'like') newLikes++; else newDislikes++;
-                    
-                    transaction.set(voteRef, { type, timestamp: serverTimestamp() });
-                    transaction.update(postRef, { likeCount: newLikes, dislikeCount: newDislikes });
-                });
-                // Optimistic UI update could go here, but listener will handle it
-            } catch(e) { console.error(e); }
-        };
+            // 2. STATE SETTLED - REMOVE LOADER & ROUTE
+            appInitialized = true;
+            document.getElementById('global-loader').style.display = 'none';
+            router.resolve();
+        });
 
-        window.openPostDetail = (postId) => {
-            window.location.hash = `#/post-detail?id=${postId}`;
-        };
-
-        window.submitComment = async (postId) => {
-            const input = document.getElementById('comment-input');
-            const txt = input.value.trim();
-            if(!txt) return;
-            
-            try {
-                await addDoc(collection(db, `pages/${postId}/comments`), {
-                    text: txt, authorId: auth.currentUser.uid, authorName: currentUserData.username, timestamp: serverTimestamp()
-                });
-                input.value = '';
-                loadPostComments(postId);
-            } catch(e) { alert("Yorum atılamadı balım"); }
-        };
-
-        // --- ADMIN/SUPERUSER ACTIONS ---
-        window.banUser = async (uid) => {
-            if(currentUserData.role !== 'superuser' && currentUserData.role !== 'admin') return;
-            const durationType = document.getElementById(`ban-type-${uid}`).value; // min, hour, day
-            const durationVal = parseInt(document.getElementById(`ban-val-${uid}`).value);
-            
-            if(!durationVal) return alert("Süre gir balım");
-
-            let millis = 0;
-            if(durationType === 'min') millis = durationVal * 60 * 1000;
-            if(durationType === 'hour') millis = durationVal * 60 * 60 * 1000;
-            if(durationType === 'day') millis = durationVal * 24 * 60 * 60 * 1000;
-
-            const bannedUntil = new Date(Date.now() + millis);
-
-            try {
-                await updateDoc(doc(db, "users", uid), { bannedUntil: bannedUntil });
-                alert(`Kullanıcı ${bannedUntil.toLocaleString()} tarihine kadar banlandı!`);
-                loadAdminData();
-            } catch(e) { alert("Hata: " + e.message); }
-        };
-
-        window.deleteUser = async (uid) => {
-            if(currentUserData.role !== 'superuser') return;
-            if(!confirm("Bu kullanıcıyı SİLMEK ve sonsuza kadar banlamak istiyor musun?")) return;
-            try {
-                // Auth'dan silemeyiz (client sdk), o yüzden verisini silip indefinite ban atıyoruz
-                await setDoc(doc(db, "users", uid), { 
-                    username: "DELETED_USER", email: "deleted", role: 'banned', bannedUntil: new Date(2200, 0, 1) 
-                }); // Soft delete + Permaban
-                alert("Kullanıcı sistemden silindi balım.");
-                loadAdminData();
-            } catch(e) { alert("Hata: " + e.message); }
-        };
-
-        window.handleRequest = async (reqId, status, uid, newEmail) => {
-            try {
-                await updateDoc(doc(db, "requests", reqId), { status });
-                let msg = status === 'approved' ? `E-posta değişim talebin ONAYLANDI balım. Yeni mail: ${newEmail}` : "E-posta değişim talebin REDDEDİLDİ balım.";
-                await sendNotification(uid, "Talep Durumu", msg);
-                alert("İşlem tamam!");
-                loadAdminData();
-            } catch(e) { console.error(e); }
-        };
-
-        window.requestEmailChange = async () => {
-            const newEmail = document.getElementById('new-email-req').value.trim();
-            if(!newEmail.includes('@')) return alert("Düzgün bir mail gir balım");
-            try {
-                await addDoc(collection(db, "requests"), {
-                    userId: auth.currentUser.uid, username: currentUserData.username,
-                    oldEmail: currentUserData.email, newEmail, status: 'pending', timestamp: serverTimestamp()
-                });
-                alert("Talep admine iletildi balım!");
-                document.getElementById('new-email-req').value = '';
-            } catch(e) { alert("Hata: " + e.message); }
-        };
-
-        // --- ROUTER ---
+        // 3. Router
         const router = {
-            load: async () => {
-                if (!authSettled) return;
+            resolve: () => {
+                if(!appInitialized) return; // Guard
 
-                const fullHash = window.location.hash || '#/login';
-                const pageKey = fullHash.replace('#/', '').split('?')[0] || 'login';
-                const params = new URLSearchParams(fullHash.split('?')[1]);
-
-                // Passcode Güvenliği (Bypass Fix)
-                if(pageKey === 'passcode') {
-                     if (!auth.currentUser || auth.currentUser.email !== SUPER_EMAIL) {
-                         window.location.hash = '#/login'; return;
-                     }
+                let hash = window.location.hash.replace('#/', '').split('?')[0] || 'login';
+                
+                // --- SECURITY REDIRECTS ---
+                if (!currentUserData) {
+                    // Not logged in
+                    if (!['login', 'register', 'passcode'].includes(hash)) {
+                        hash = 'login';
+                        window.history.replaceState(null, null, '#/login');
+                    }
+                } else {
+                    // Logged in
+                    if (['login', 'register', 'passcode'].includes(hash)) {
+                        hash = 'home';
+                        window.history.replaceState(null, null, '#/home');
+                    }
                 }
 
-                // Auth Guard
-                if (!currentUserData && !['login', 'register', 'passcode'].includes(pageKey)) {
-                    window.location.hash = '#/login'; return;
-                }
-                if (currentUserData && ['login', 'register', 'passcode'].includes(pageKey)) {
-                    window.location.hash = '#/home'; return;
+                // --- BYPASS PREVENTION FOR SUPERUSER ---
+                if (hash === 'passcode') {
+                    // Passcode sayfasına dışarıdan erişimi engelle
+                    if (auth.currentUser?.email !== SUPER_EMAIL) {
+                        hash = 'login'; window.history.replaceState(null, null, '#/login');
+                    }
                 }
 
+                // --- RENDER ---
                 document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-                const currentPage = document.getElementById(`page-${pageKey}`);
-                if (currentPage) {
-                    currentPage.classList.remove('hidden');
-                    if (pageKey === 'home') loadHomeData();
-                    if (pageKey === 'admin') loadAdminData();
-                    if (pageKey === 'post-detail') loadPostDetail(params.get('id'));
-                    if (pageKey === 'profile') loadProfileData();
-                    if (pageKey === 'notifications') loadNotifications();
+                
+                // Navbar Logic
+                const nav = document.getElementById('main-nav');
+                if(['login', 'register', 'passcode'].includes(hash)) nav.classList.add('hidden');
+                else {
+                    nav.classList.remove('hidden');
+                    updateNavbar();
                 }
-                document.querySelector('main').style.opacity = "1";
+
+                const targetPage = document.getElementById(`page-${hash}`);
+                if(targetPage) {
+                    targetPage.classList.remove('hidden');
+                    // Page Loaders
+                    if(hash === 'home') loadHome();
+                    if(hash === 'admin') loadAdmin();
+                    if(hash === 'post-detail') {
+                         const params = new URLSearchParams(window.location.hash.split('?')[1]);
+                         loadPostDetail(params.get('id'));
+                    }
+                    if(hash === 'notifications') loadNotifications();
+                    if(hash === 'profile') loadProfile();
+                }
+                
                 if(window.lucide) window.lucide.createIcons();
             }
         };
 
-        // --- LOADERS ---
-        async function loadHomeData() {
-            if (!currentUserData) return;
-            // Config Load
+        window.addEventListener('hashchange', router.resolve);
+
+        // --- PAGE LOGIC ---
+
+        function updateNavbar() {
+            document.getElementById('nav-user-name').innerText = currentUserData.username;
+            const roleBadge = document.getElementById('role-badge');
+            let roleText = "Yetki: Kullanıcı";
+            let roleColor = "bg-gray-800 text-gray-400";
+            
+            if(currentUserData.role === 'admin') { roleText = "Yetki: Admin"; roleColor = "bg-blue-900 text-blue-300"; }
+            if(currentUserData.role === 'superuser') { roleText = "Yetki: SuperSU"; roleColor = "bg-red-900 text-red-300"; }
+            
+            roleBadge.className = `text-[10px] font-black uppercase px-2 py-1 rounded ${roleColor}`;
+            roleBadge.innerText = roleText;
+
+            // Notification Check
+            checkNotifications();
+        }
+
+        async function checkNotifications() {
+            if(!auth.currentUser) return;
+            const q = query(collection(db, `users/${auth.currentUser.uid}/notifications`), where("read", "==", false));
+            const snap = await getDocs(q);
+            const badge = document.getElementById('notif-dot');
+            if(!snap.empty) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+        }
+
+        async function loadHome() {
+            // Config
             try {
                 const sys = await getDoc(doc(db, "system", "config"));
                 if(sys.exists()) {
-                    document.getElementById('display-announcement').innerText = sys.data().announcement || "Duyuru yok balım.";
-                    document.getElementById('display-quote').innerText = sys.data().quote || "Söz yok balım.";
+                    document.getElementById('home-ann').innerText = sys.data().announcement || "Duyuru yok balım.";
+                    document.getElementById('home-quote').innerText = sys.data().quote || "Söz yok balım.";
+                    if(currentUserData.role === 'superuser') {
+                        document.getElementById('sys-ann-input').value = sys.data().announcement || "";
+                        document.getElementById('sys-quote-input').value = sys.data().quote || "";
+                    }
                 }
-            } catch(e) {}
+            } catch(e){}
 
-            // Role Badge
-            const roleBadge = document.getElementById('role-badge');
-            roleBadge.innerText = currentUserData.role === 'superuser' ? 'Yetki: SuperSU' : currentUserData.role === 'admin' ? 'Yetki: Admin' : 'Yetki: Kullanıcı';
-            roleBadge.className = currentUserData.role === 'superuser' ? 'text-[9px] font-black text-red-500 uppercase bg-red-900/20 px-2 py-1 rounded' : 'text-[9px] font-black text-blue-400 uppercase bg-blue-900/20 px-2 py-1 rounded';
+            // SuperUser Tools Visibility
+            document.getElementById('su-tools').classList.toggle('hidden', currentUserData.role !== 'superuser');
+            document.getElementById('admin-link').classList.toggle('hidden', currentUserData.role === 'user');
 
             // Posts
-            const container = document.getElementById('pages-container');
+            const container = document.getElementById('feed-container');
             container.innerHTML = '<div class="spinner mx-auto"></div>';
             
             const q = query(collection(db, "pages"), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
             container.innerHTML = '';
             
-            if(snap.empty) { container.innerHTML = '<div class="text-center text-gray-500 py-10">Bomboş buralar balım...</div>'; return; }
+            if(snap.empty) { container.innerHTML = '<div class="text-center text-gray-500">Henüz paylaşım yok balım.</div>'; return; }
 
             snap.forEach(d => {
                 const p = d.data();
                 const canDelete = currentUserData.role === 'superuser' || (currentUserData.role === 'admin' && p.authorId === auth.currentUser.uid) || p.authorId === auth.currentUser.uid;
-                // Text truncate logic
-                const isLong = p.content.length > 100;
+                const isLong = p.content.length > 150;
                 
                 const div = document.createElement('div');
-                div.className = "bg-white/5 border border-white/10 p-5 rounded-3xl mb-4 relative hover:bg-white/10 transition-all";
+                div.className = "glass-card !p-5 mb-4 hover:bg-white/5 transition-colors";
                 div.innerHTML = `
-                    <div onclick="window.openPostDetail('${d.id}')" class="cursor-pointer">
-                        <h4 class="font-bold text-blue-300 text-lg mb-2 break-words">${p.title}</h4>
-                        <p id="post-content-${d.id}" class="text-gray-300 text-sm whitespace-pre-wrap break-words ${isLong ? 'line-clamp-3' : ''}">${p.content}</p>
-                        ${isLong ? `<button id="read-more-${d.id}" onclick="event.stopPropagation(); window.toggleReadMore('${d.id}')" class="text-xs text-blue-400 font-bold mt-1 hover:underline">Devamını Oku...</button>` : ''}
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 onclick="window.location.hash='#/post-detail?id=${d.id}'" class="font-bold text-lg text-blue-300 cursor-pointer break-words flex-1 pr-4 hover:underline">${p.title}</h4>
+                        ${canDelete ? `<button onclick="window.deletePost('${d.id}')" class="text-red-500 opacity-50 hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
                     </div>
-                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                        <span class="flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${p.authorName}</span>
-                        <div class="flex items-center gap-4">
-                            <span class="flex items-center gap-1"><i data-lucide="thumbs-up" class="w-3 h-3 text-green-400"></i> ${p.likeCount || 0}</span>
-                            <span class="flex items-center gap-1"><i data-lucide="thumbs-down" class="w-3 h-3 text-red-400"></i> ${p.dislikeCount || 0}</span>
-                            <span>${formatDate(p.timestamp)}</span>
+                    <p id="p-content-${d.id}" class="text-gray-300 text-sm whitespace-pre-wrap break-words ${isLong ? 'line-clamp-3' : ''}">${p.content}</p>
+                    ${isLong ? `<button onclick="this.previousElementSibling.classList.toggle('line-clamp-3'); this.innerText = this.innerText === 'Devamını Oku...' ? 'Kısalt' : 'Devamını Oku...'" class="text-xs text-blue-400 font-bold mt-1">Devamını Oku...</button>` : ''}
+                    
+                    <div class="mt-4 flex justify-between items-center border-t border-white/10 pt-3">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${p.authorName}</span>
+                        <div class="flex items-center gap-3">
+                             <div class="flex gap-3 text-xs font-bold text-gray-400">
+                                <span class="flex items-center gap-1"><i data-lucide="thumbs-up" class="w-3 h-3 text-green-500"></i> ${p.likeCount || 0}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="thumbs-down" class="w-3 h-3 text-red-500"></i> ${p.dislikeCount || 0}</span>
+                             </div>
+                             <span class="text-[9px] text-gray-600">${formatDate(p.timestamp)}</span>
                         </div>
                     </div>
-                    ${canDelete ? `<button onclick="window.deletePage('${d.id}')" class="absolute top-4 right-4 text-red-400 opacity-50 hover:opacity-100 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
                 `;
                 container.appendChild(div);
             });
             if(window.lucide) window.lucide.createIcons();
         }
 
-        async function loadPostDetail(postId) {
-            if(!postId) return;
-            const container = document.getElementById('detail-content');
+        async function loadPostDetail(id) {
+            const container = document.getElementById('detail-container');
             container.innerHTML = '<div class="spinner mx-auto"></div>';
             
-            const docRef = doc(db, "pages", postId);
-            const pSnap = await getDoc(docRef);
-            if(!pSnap.exists()) { container.innerHTML = "Silinmiş balım."; return; }
-            const p = pSnap.data();
+            const docRef = doc(db, "pages", id);
+            const snap = await getDoc(docRef);
+            if(!snap.exists()) { container.innerHTML = "Silinmiş."; return; }
+            const p = snap.data();
 
             container.innerHTML = `
-                <h2 class="text-3xl font-black text-white mb-4 break-words">${p.title}</h2>
-                <div class="text-xs text-gray-500 mb-6 flex gap-4 uppercase font-bold tracking-widest">
-                    <span><i data-lucide="user" class="w-3 h-3 inline"></i> ${p.authorName}</span>
+                <h2 class="text-2xl font-black mb-2 break-words text-white">${p.title}</h2>
+                <div class="text-xs text-gray-500 mb-6 flex gap-4 uppercase font-bold">
+                    <span>${p.authorName}</span>
                     <span>${formatDate(p.timestamp)}</span>
                 </div>
-                <div class="bg-white/5 p-6 rounded-3xl text-gray-200 leading-relaxed whitespace-pre-wrap break-words mb-8 border border-white/10">${p.content}</div>
+                <div class="bg-white/5 p-4 rounded-xl text-gray-200 whitespace-pre-wrap break-words mb-6">${p.content}</div>
                 
-                <div class="flex gap-4 mb-8">
-                    <button onclick="window.votePost('${postId}', 'like')" class="flex-1 py-3 bg-green-500/20 text-green-400 rounded-xl font-bold hover:bg-green-500/30 transition flex justify-center items-center gap-2"><i data-lucide="thumbs-up" class="w-4 h-4"></i> Beğen (${p.likeCount || 0})</button>
-                    <button onclick="window.votePost('${postId}', 'dislike')" class="flex-1 py-3 bg-red-500/20 text-red-400 rounded-xl font-bold hover:bg-red-500/30 transition flex justify-center items-center gap-2"><i data-lucide="thumbs-down" class="w-4 h-4"></i> Beğenme (${p.dislikeCount || 0})</button>
+                <div class="flex gap-2 mb-8">
+                    <button onclick="window.vote('${id}', 'like')" class="flex-1 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-xl font-bold flex justify-center gap-2"><i data-lucide="thumbs-up" class="w-4 h-4"></i> Like (${p.likeCount||0})</button>
+                    <button onclick="window.vote('${id}', 'dislike')" class="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold flex justify-center gap-2"><i data-lucide="thumbs-down" class="w-4 h-4"></i> Dislike (${p.dislikeCount||0})</button>
                 </div>
 
-                <h3 class="font-bold text-white mb-4 border-b border-white/10 pb-2">Yorumlar</h3>
-                <div id="comments-list" class="space-y-4 mb-8 max-h-[400px] overflow-y-auto"></div>
+                <h3 class="font-bold border-b border-white/10 pb-2 mb-4">Yorumlar</h3>
+                <div id="comment-list-${id}" class="space-y-3 mb-6 max-h-60 overflow-y-auto"></div>
                 
                 <div class="flex gap-2">
-                    <input id="comment-input" type="text" maxlength="200" placeholder="Yorumun balım (max 200)..." class="input-field !py-3">
-                    <button onclick="window.submitComment('${postId}')" class="bg-blue-600 px-6 rounded-xl font-bold hover:bg-blue-500"><i data-lucide="send" class="w-4 h-4"></i></button>
+                    <input id="comment-in-${id}" class="input-field !py-2" placeholder="Yorum yaz balım...">
+                    <button onclick="window.sendComment('${id}')" class="btn-primary !w-auto !px-4 bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </div>
             `;
-            loadPostComments(postId);
             
-            // Listen to post updates for realtime like count
-            // (Using onSnapshot on document would be better but keeping it simple with periodic refresh or manual)
-        }
-
-        async function loadPostComments(postId) {
-            const list = document.getElementById('comments-list');
-            const q = query(collection(db, `pages/${postId}/comments`), orderBy("timestamp", "asc"));
-            const snap = await getDocs(q);
-            list.innerHTML = '';
-            snap.forEach(d => {
-                const c = d.data();
-                list.innerHTML += `
-                    <div class="bg-black/40 p-3 rounded-xl border border-white/5">
-                        <div class="flex justify-between text-[10px] text-gray-500 uppercase font-bold mb-1">
-                            <span>${c.authorName}</span>
-                            <span>${formatDate(c.timestamp)}</span>
-                        </div>
-                        <p class="text-sm text-gray-300 break-words">${c.text}</p>
+            // Comments Load
+            const cQ = query(collection(db, `pages/${id}/comments`), orderBy("timestamp", "asc"));
+            const cSnap = await getDocs(cQ);
+            const cList = document.getElementById(`comment-list-${id}`);
+            cSnap.forEach(cd => {
+                const c = cd.data();
+                cList.innerHTML += `
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                         <div class="flex justify-between text-[9px] text-gray-500 uppercase font-bold mb-1"><span>${c.authorName}</span><span>${formatDate(c.timestamp)}</span></div>
+                         <div class="text-sm text-gray-300 break-words">${c.text}</div>
                     </div>
                 `;
             });
+            if(window.lucide) window.lucide.createIcons();
         }
 
-        async function loadAdminData() {
-            const userList = document.getElementById('user-list-body');
-            const reqList = document.getElementById('request-list-body');
-            
-            // Users
+        async function loadAdmin() {
+            // Users Table
+            const uTbody = document.getElementById('admin-users');
+            uTbody.innerHTML = '';
             const uSnap = await getDocs(collection(db, "users"));
-            userList.innerHTML = '';
             uSnap.forEach(d => {
                 const u = d.data();
-                userList.innerHTML += `
+                uTbody.innerHTML += `
                     <tr class="border-b border-white/5">
                         <td class="p-3">${u.username}</td>
-                        <td class="p-3 uppercase text-[10px] font-bold text-blue-300">${u.role}</td>
-                        <td class="p-3">
-                            ${currentUserData.role === 'superuser' || (currentUserData.role === 'admin' && u.role === 'user') ? `
-                            <div class="flex gap-2 items-center">
-                                <select id="ban-type-${d.id}" class="bg-black/50 text-[10px] rounded"><option value="min">Dk</option><option value="hour">Saat</option><option value="day">Gün</option></select>
-                                <input id="ban-val-${d.id}" type="number" class="w-10 bg-black/50 text-[10px] rounded pl-1" value="1">
-                                <button onclick="window.banUser('${d.id}')" class="text-red-400 hover:text-red-300"><i data-lucide="ban" class="w-4 h-4"></i></button>
-                                ${currentUserData.role === 'superuser' ? `<button onclick="window.deleteUser('${d.id}')" class="text-red-600 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
-                            </div>
+                        <td class="p-3 text-[10px] uppercase font-bold ${u.role==='superuser'?'text-red-400':'text-blue-400'}">${u.role}</td>
+                        <td class="p-3 flex items-center gap-2">
+                            ${(currentUserData.role==='superuser' || (currentUserData.role==='admin' && u.role==='user')) ? `
+                                <select id="ban-u-${d.id}" class="bg-black/40 text-[10px] rounded p-1"><option value="min">Dk</option><option value="hour">Saat</option><option value="day">Gün</option></select>
+                                <input id="ban-t-${d.id}" type="number" class="w-8 bg-black/40 text-[10px] rounded p-1" value="1">
+                                <button onclick="window.doBan('${d.id}')" class="text-red-400 bg-red-900/20 p-1 rounded"><i data-lucide="ban" class="w-3 h-3"></i></button>
+                                ${currentUserData.role==='superuser' ? `<button onclick="window.nukeUser('${d.id}')" class="text-red-600 bg-red-900/30 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
                             ` : '-'}
                         </td>
                     </tr>
                 `;
             });
 
-            // Requests
+            // Requests Table
+            const rTbody = document.getElementById('admin-reqs');
+            rTbody.innerHTML = '';
             const rSnap = await getDocs(query(collection(db, "requests"), where("status", "==", "pending")));
-            reqList.innerHTML = '';
-            if(rSnap.empty) reqList.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500 text-xs">Bekleyen talep yok balım.</td></tr>';
+            if(rSnap.empty) rTbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-gray-500 text-xs">Talep yok.</td></tr>';
             rSnap.forEach(d => {
                 const r = d.data();
-                reqList.innerHTML += `
+                rTbody.innerHTML += `
                     <tr class="border-b border-white/5">
                         <td class="p-3">${r.username}</td>
-                        <td class="p-3 text-xs opacity-50">${r.newEmail}</td>
+                        <td class="p-3 text-xs opacity-60">${r.newEmail}</td>
                         <td class="p-3 flex gap-2">
-                            <button onclick="window.handleRequest('${d.id}', 'approved', '${r.userId}', '${r.newEmail}')" class="text-green-400 bg-green-900/20 p-1 rounded"><i data-lucide="check" class="w-3 h-3"></i></button>
-                            <button onclick="window.handleRequest('${d.id}', 'rejected', '${r.userId}', '')" class="text-red-400 bg-red-900/20 p-1 rounded"><i data-lucide="x" class="w-3 h-3"></i></button>
+                            <button onclick="window.decideReq('${d.id}', 'approved', '${r.userId}', '${r.newEmail}')" class="text-green-400 bg-green-900/20 p-1 rounded"><i data-lucide="check" class="w-3 h-3"></i></button>
+                            <button onclick="window.decideReq('${d.id}', 'rejected', '${r.userId}')" class="text-red-400 bg-red-900/20 p-1 rounded"><i data-lucide="x" class="w-3 h-3"></i></button>
                         </td>
                     </tr>
                 `;
@@ -441,208 +437,239 @@
         }
 
         async function loadNotifications() {
-            const list = document.getElementById('notif-list');
+            const cont = document.getElementById('notif-cont');
+            cont.innerHTML = '<div class="spinner mx-auto"></div>';
             const q = query(collection(db, `users/${auth.currentUser.uid}/notifications`), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
-            list.innerHTML = '';
-            if(snap.empty) list.innerHTML = '<div class="text-center text-gray-500">Bildirim yok balım.</div>';
+            cont.innerHTML = '';
+            if(snap.empty) { cont.innerHTML = "Bildirim yok balım."; return; }
             snap.forEach(d => {
                 const n = d.data();
-                list.innerHTML += `
-                    <div class="bg-white/5 p-4 rounded-2xl mb-2 border-l-4 ${n.read ? 'border-gray-500' : 'border-blue-500'}">
-                        <h4 class="font-bold text-sm text-white">${n.title}</h4>
-                        <p class="text-xs text-gray-400 mt-1">${n.message}</p>
-                        <div class="text-[9px] text-gray-600 mt-2 text-right">${formatDate(n.timestamp)}</div>
+                cont.innerHTML += `
+                    <div class="bg-white/5 p-3 rounded-xl mb-2 border-l-2 ${n.read ? 'border-gray-600' : 'border-blue-500'}">
+                        <h4 class="font-bold text-sm">${n.title}</h4>
+                        <p class="text-xs text-gray-300 mt-1">${n.message}</p>
+                        <div class="text-[9px] text-gray-600 text-right mt-1">${formatDate(n.timestamp)}</div>
                     </div>
                 `;
                 updateDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${d.id}`), { read: true });
             });
-            document.getElementById('notif-badge').classList.add('hidden');
+            document.getElementById('notif-dot').classList.add('hidden');
         }
 
-        async function loadProfileData() {
-            document.getElementById('prof-user').innerText = currentUserData.username;
-            document.getElementById('prof-email').innerText = currentUserData.email;
+        async function loadProfile() {
+            document.getElementById('p-user').innerText = currentUserData.username;
+            document.getElementById('p-email').innerText = currentUserData.email;
         }
 
-        // --- AUTH LISTENER ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Ban Kontrolü
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    if(data.bannedUntil && data.bannedUntil.toMillis() > Date.now()) {
-                        await signOut(auth);
-                        alert(`BU HESAP ${data.bannedUntil.toDate().toLocaleString()} TARİHİNE KADAR YASAKLANMIŞTIR!`);
-                        return;
-                    }
-                    if(data.username === "DELETED_USER") {
-                         await signOut(auth); alert("Bu hesap silinmiştir."); return;
-                    }
+        // --- WINDOW FUNCTIONS (Exposed) ---
+        window.createPost = async () => {
+            const t = document.getElementById('post-title').value;
+            const c = document.getElementById('post-content').value;
+            if(!t || !c) return alert("Boş bırakma balım");
+            const btn = document.getElementById('btn-post');
+            btn.disabled = true;
+            try {
+                await addDoc(collection(db, "pages"), { title: t, content: c, authorId: auth.currentUser.uid, authorName: currentUserData.username, timestamp: serverTimestamp() });
+                document.getElementById('post-title').value = ''; document.getElementById('post-content').value = '';
+                loadHome();
+            } catch(e) { console.error(e); } finally { btn.disabled = false; }
+        };
 
-                    currentUserData = data;
-                    updateDoc(doc(db, "users", user.uid), { lastLogin: serverTimestamp(), device: navigator.userAgent });
+        window.deletePost = async (id) => { if(confirm("Silmek istediğine emin misin balım?")) { await deleteDoc(doc(db, "pages", id)); loadHome(); } };
+        
+        window.saveSystemConfig = async () => {
+            if(currentUserData.role !== 'superuser') return;
+            const a = document.getElementById('sys-ann-input').value;
+            const q = document.getElementById('sys-quote-input').value;
+            await setDoc(doc(db, "system", "config"), { announcement: a, quote: q }, {merge:true});
+            alert("Sistem güncellendi balım! ✓");
+            loadHome();
+        };
+
+        window.vote = async (pid, type) => {
+            const uid = auth.currentUser.uid;
+            const voteRef = doc(db, `pages/${pid}/votes/${uid}`);
+            const postRef = doc(db, "pages", pid);
+            // Simple transaction logic for 1 vote per user
+            try {
+                await runTransaction(db, async(t) => {
+                    const vDoc = await t.get(voteRef);
+                    const pDoc = await t.get(postRef);
+                    if(!pDoc.exists()) return;
+                    let l = pDoc.data().likeCount || 0;
+                    let d = pDoc.data().dislikeCount || 0;
                     
-                    // Bildirim Kontrol
-                    const notifQ = query(collection(db, `users/${user.uid}/notifications`), where("read", "==", false));
-                    const notifSnap = await getDocs(notifQ);
-                    if(!notifSnap.empty) document.getElementById('notif-badge').classList.remove('hidden');
-
-                } else if (user.email === SUPER_EMAIL) {
-                    currentUserData = { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' };
-                }
-            } else {
-                currentUserData = null;
-            }
-            authSettled = true;
-            router.load();
-        });
-
-        // --- EVENTS ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initParticles();
-            window.addEventListener('hashchange', router.load);
-
-            document.getElementById('form-register').onsubmit = async (e) => {
-                e.preventDefault();
-                const u = document.getElementById('reg-user').value.trim();
-                const em = document.getElementById('reg-email').value.trim();
-                const p = document.getElementById('reg-pass').value;
-                if(p !== document.getElementById('reg-pass2').value) return alert("Şifreler uyuşmuyor!");
-                if(u.length < 4 || u.includes(' ')) return alert("Kullanıcı adı uygun değil");
-
-                // Kesin Kontrol: Kullanıcı adı veritabanında var mı?
-                const q = query(collection(db, "users"), where("username", "==", u));
-                const snap = await getDocs(q);
-                if(!snap.empty) return alert("BU İSİM DOLU BALIM! BAŞKA BİR TANE SEÇ.");
-
-                try {
-                    const cred = await createUserWithEmailAndPassword(auth, em, p);
-                    await setDoc(doc(db, "users", cred.user.uid), { 
-                        username: u, email: em, role: 'user', createdAt: serverTimestamp(), device: navigator.userAgent
-                    });
-                    logAction('register', cred.user.uid, em);
-                    alert("Kayıt Başarılı Balım!");
-                } catch(err) { alert(err.message); }
-            };
-
-            document.getElementById('form-login').onsubmit = async (e) => {
-                e.preventDefault();
-                const inp = document.getElementById('login-input').value.trim();
-                const pass = document.getElementById('login-password').value;
-                if(inp === SUPER_USER && pass === SUPER_PASS) { window.location.hash = '#/passcode'; return; }
-                
-                try {
-                    let email = inp;
-                    if(!inp.includes('@')) {
-                        const snap = await getDocs(query(collection(db, "users"), where("username", "==", inp)));
-                        if(snap.empty) throw { code: 'auth/user-not-found' };
-                        email = snap.docs[0].data().email;
+                    if(vDoc.exists()) {
+                        if(vDoc.data().type === type) return; // Same vote
+                        if(vDoc.data().type === 'like') l--; else d--;
                     }
-                    const cred = await signInWithEmailAndPassword(auth, email, pass);
-                    logAction('login', cred.user.uid, email);
-                    localStorage.setItem('lastAuthTimestamp', Date.now().toString());
-                } catch(err) { alert(translateError(err.code)); }
-            };
+                    if(type === 'like') l++; else d++;
+                    t.set(voteRef, { type });
+                    t.update(postRef, { likeCount: l, dislikeCount: d });
+                });
+                loadPostDetail(pid); // Refresh UI
+            } catch(e) { console.error(e); }
+        };
 
-            document.getElementById('form-passcode').onsubmit = async (e) => {
-                e.preventDefault();
-                if(!auth.currentUser || auth.currentUser.email !== SUPER_EMAIL) {
-                     alert("Önce Ali Çelik hesabıyla giriş yapmalısın!"); window.location.hash = '#/login'; return;
-                }
-                if(document.getElementById('passcode-input').value === SECURITY_CODE) {
+        window.sendComment = async (pid) => {
+            const inp = document.getElementById(`comment-in-${pid}`);
+            if(!inp.value.trim()) return;
+            await addDoc(collection(db, `pages/${pid}/comments`), { text: inp.value, authorName: currentUserData.username, timestamp: serverTimestamp() });
+            inp.value = '';
+            loadPostDetail(pid);
+        };
+
+        window.doBan = async (uid) => {
+            const type = document.getElementById(`ban-u-${uid}`).value;
+            const val = parseInt(document.getElementById(`ban-t-${uid}`).value);
+            let ms = 0;
+            if(type==='min') ms = val*60000; if(type==='hour') ms = val*3600000; if(type==='day') ms = val*86400000;
+            await updateDoc(doc(db, "users", uid), { bannedUntil: new Date(Date.now()+ms) });
+            alert("Banlandı!");
+            loadAdmin();
+        };
+
+        window.nukeUser = async (uid) => {
+            if(confirm("Kullanıcı tamamen silinecek ve banlanacak?")) {
+                await setDoc(doc(db, "users", uid), { username: "DELETED_USER", email: "deleted", bannedUntil: new Date(2200, 0, 1) });
+                alert("Silindi.");
+                loadAdmin();
+            }
+        };
+
+        window.reqEmail = async () => {
+            const m = document.getElementById('new-mail-input').value;
+            if(!m.includes('@')) return alert("Düzgün mail gir balım");
+            await addDoc(collection(db, "requests"), { userId: auth.currentUser.uid, username: currentUserData.username, oldEmail: currentUserData.email, newEmail: m, status: 'pending', timestamp: serverTimestamp() });
+            alert("Talep gönderildi balım.");
+        };
+
+        window.decideReq = async (rid, status, uid, mail) => {
+            await updateDoc(doc(db, "requests", rid), { status });
+            const msg = status === 'approved' ? `E-posta değişim talebin ONAYLANDI. Yeni: ${mail}` : "E-posta değişim talebin REDDEDİLDİ.";
+            await addDoc(collection(db, `users/${uid}/notifications`), { title: "Talep Sonucu", message: msg, read: false, timestamp: serverTimestamp() });
+            alert("İşlem tamam.");
+            loadAdmin();
+        };
+
+        // --- AUTH FORMS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('form-login');
+            if(loginForm) {
+                loginForm.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const inp = document.getElementById('login-input').value.trim();
+                    const pass = document.getElementById('login-password').value;
+                    
+                    if(inp === SUPER_USER && pass === SUPER_PASS) { window.location.hash = '#/passcode'; return; }
+
                     try {
-                        const cred = await createUserWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS).catch(async e => {
-                            if(e.code === 'auth/email-already-in-use') return await signInWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS);
-                            throw e;
-                        });
-                        // Ensure SuperUser record exists
-                        await setDoc(doc(db, "users", cred.user.uid), { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' }, {merge:true});
-                        window.location.hash = '#/home';
-                    } catch(e) { alert(e.message); }
-                } else alert("Yanlış Kod!");
-            };
-        });
+                        let email = inp;
+                        if(!inp.includes('@')) {
+                            // Username login attempt
+                            const q = query(collection(db, "users"), where("username", "==", inp));
+                            const snap = await getDocs(q);
+                            if(snap.empty) throw {code: 'auth/user-not-found'};
+                            email = snap.docs[0].data().email;
+                        }
+                        await signInWithEmailAndPassword(auth, email, pass);
+                        localStorage.setItem('lastAuthTimestamp', Date.now().toString());
+                        // Router handles redirect
+                    } catch(err) { alert("Hata: " + err.code); }
+                };
+            }
 
-        function initParticles() {
-            const c = document.getElementById('particles');
-            for(let i=0; i<40; i++) {
+            const regForm = document.getElementById('form-register');
+            if(regForm) {
+                regForm.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const u = document.getElementById('reg-user').value.trim();
+                    const em = document.getElementById('reg-email').value.trim();
+                    const p = document.getElementById('reg-pass').value;
+                    if(p !== document.getElementById('reg-pass2').value) return alert("Şifreler uyuşmuyor!");
+                    
+                    // Final Duplicate Check
+                    const q = query(collection(db, "users"), where("username", "==", u));
+                    const snap = await getDocs(q);
+                    if(!snap.empty) return alert("Bu isim kapılmış balım!");
+
+                    try {
+                        const cred = await createUserWithEmailAndPassword(auth, em, p);
+                        await setDoc(doc(db, "users", cred.user.uid), { username: u, email: em, role: 'user', createdAt: serverTimestamp() });
+                        logAction('register', cred.user.uid, em);
+                        alert("Kayıt Başarılı Balım!");
+                        // Router handles redirect
+                    } catch(err) { alert(err.message); }
+                };
+            }
+
+            const passForm = document.getElementById('form-passcode');
+            if(passForm) {
+                passForm.onsubmit = async (e) => {
+                    e.preventDefault();
+                    if(document.getElementById('passcode-input').value === SECURITY_CODE) {
+                        try {
+                            // Ensure superuser exists in firestore
+                            const cred = await signInWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS).catch(async () => {
+                                return await createUserWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS);
+                            });
+                            await setDoc(doc(db, "users", cred.user.uid), { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' }, {merge:true});
+                            window.location.hash = '#/home';
+                        } catch(err) { alert(err.message); }
+                    } else alert("Yanlış Kod!");
+                }
+            }
+
+            // Init particles
+            const pCont = document.getElementById('particles');
+            for(let i=0; i<30; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
-                const s = Math.random()*200+50;
-                p.style.width=s+'px'; p.style.height=s+'px';
+                const size = Math.random()*150+50;
+                p.style.width=size+'px'; p.style.height=size+'px';
                 p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%';
-                p.style.background = `radial-gradient(circle, rgba(${Math.random()*255},${Math.random()*255},255,0.3) 0%, transparent 70%)`;
-                p.style.animationDuration = Math.random()*10+10+'s';
-                p.style.animationName = 'float';
-                c.appendChild(p);
+                p.style.background = `radial-gradient(circle, rgba(${Math.random()*255},255,255,0.15) 0%, transparent 70%)`;
+                p.style.animationDuration = Math.random()*15+10+'s';
+                pCont.appendChild(p);
             }
-        }
+        });
+
     </script>
-    <style>
-        :root { --brand: #027AFF; }
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        main { opacity: 0; transition: opacity 0.5s ease; width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; }
-        
-        .page-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        #page-home, #page-admin, #page-post-detail, #page-profile, #page-notifications { align-items: flex-start; overflow-y: auto; padding-top: 5rem; }
-        
-        .glass-card { 
-            background: rgba(10, 15, 30, 0.9); backdrop-filter: blur(40px);
-            border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.25);
-            border-radius: 28px; box-shadow: 0 40px 100px rgba(0,0,0,0.9);
-            width: 100%; position: relative; z-index: 20;
-        }
-
-        .logo-text { font-weight: 900; background: linear-gradient(to right, #fff, #00f3ff, #fff); -webkit-background-clip: text; color: transparent; background-size: 200%; animation: shine 4s linear infinite; letter-spacing: -2px; }
-        @keyframes shine { to { background-position: -200% center; } }
-
-        .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: white; padding: 16px; border-radius: 16px; width: 100%; outline: none; transition: 0.3s; }
-        .input-field:focus { border-color: var(--brand); background: rgba(2,122,255,0.1); }
-        .btn-primary { 
-            background: var(--brand); padding: 16px; border-radius: 16px; width: 100%; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; 
-            position: relative; overflow: hidden;
-        }
-        .btn-primary::after { content:''; position:absolute; top:0; left:-150%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); transform:skewX(-20deg); animation: btnShine 3s infinite; }
-        @keyframes btnShine { 0%{left:-150%} 20%{left:150%} 100%{left:150%} }
-
-        #particles { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
-        .particle { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(50px); animation-iteration-count: infinite; }
-        @keyframes float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-20px)} }
-        
-        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .nav-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 50; backdrop-filter: blur(20px); background: rgba(0,0,0,0.7); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 1rem; }
-    </style>
 </head>
 <body>
-    <div id="particles"></div>
-
-    <!-- NAVBAR (Conditional) -->
-    <div id="main-nav" class="nav-fixed hidden flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <span class="logo-text text-xl">hizliyim.com</span>
-            <div id="role-badge" class="hidden md:block"></div>
-        </div>
-        <div class="flex items-center gap-4">
-            <button onclick="window.location.hash='#/notifications'" class="relative p-2 text-gray-400 hover:text-white">
-                <i data-lucide="bell" class="w-5 h-5"></i>
-                <span id="notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-            </button>
-            <div class="relative group">
-                <button onclick="window.location.hash='#/profile'" class="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-white">
-                    <i data-lucide="user-circle" class="w-5 h-5"></i> <span id="welcome-username" class="hidden sm:inline">...</span>
-                </button>
-            </div>
-            <button onclick="window.handleLogout()" class="text-red-400 hover:text-red-300"><i data-lucide="log-out" class="w-5 h-5"></i></button>
-        </div>
+    <!-- GLOBAL LOADER -->
+    <div id="global-loader">
+        <div class="logo-text text-4xl mb-4">hizliyim.com</div>
+        <div class="spinner"></div>
+        <p class="text-gray-500 text-xs mt-4 font-bold uppercase tracking-widest animate-pulse">Sistem Başlatılıyor Balım...</p>
     </div>
 
+    <div id="particles"></div>
+
+    <!-- NAVBAR -->
+    <nav id="main-nav" class="nav-fixed hidden flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <span class="logo-text text-xl cursor-pointer" onclick="window.location.hash='#/home'">hizliyim.com</span>
+            <div id="role-badge"></div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.hash='#/notifications'" class="relative text-gray-400 hover:text-white">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span id="notif-dot" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+            </button>
+            <button onclick="window.location.hash='#/profile'" class="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-white">
+                <i data-lucide="user-circle" class="w-5 h-5"></i> <span id="nav-user-name" class="hidden sm:inline">...</span>
+            </button>
+            <button onclick="window.handleLogout()" class="text-red-400 hover:text-red-300"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
     <main>
-        <!-- 1. LOGIN -->
-        <div id="page-login" class="page-content hidden">
+        
+        <!-- LOGIN -->
+        <div id="page-login" class="page-content page-center hidden">
             <div class="glass-card p-10 max-w-sm text-center">
                 <h1 class="text-4xl logo-text mb-2">hizliyim.com</h1>
                 <p class="text-gray-400 text-sm mb-8 font-bold tracking-wide">HOŞGELDİN BALIM</p>
@@ -655,19 +682,19 @@
             </div>
         </div>
 
-        <!-- 2. REGISTER -->
-        <div id="page-register" class="page-content hidden">
+        <!-- REGISTER -->
+        <div id="page-register" class="page-content page-center hidden">
             <div class="glass-card p-10 max-w-sm text-center">
                 <h1 class="text-3xl logo-text mb-6">YENİ HESAP</h1>
                 <form id="form-register" class="space-y-4 text-left">
                     <div>
-                        <input type="text" id="reg-user" placeholder="Kullanıcı Adı" class="input-field" oninput="validateInput('username', this)" required>
-                        <div id="reg-user-msg" class="text-[10px] ml-1 mt-1 h-3"></div>
+                        <input type="text" id="reg-user" placeholder="Kullanıcı Adı" class="input-field" oninput="window.validateRegister(this, 'username')" required>
+                        <div id="reg-user-msg" class="h-3"></div>
                     </div>
                     <input type="email" id="reg-email" placeholder="E-posta Adresi" class="input-field" required>
                     <div>
-                        <input type="password" id="reg-pass" placeholder="Şifre" class="input-field" oninput="validateInput('password', this)" required>
-                        <div id="reg-pass-msg" class="text-[10px] ml-1 mt-1 h-3"></div>
+                        <input type="password" id="reg-pass" placeholder="Şifre" class="input-field" oninput="window.validateRegister(this, 'password')" required>
+                        <div id="reg-pass-msg" class="h-3"></div>
                     </div>
                     <input type="password" id="reg-pass2" placeholder="Şifre Tekrar" class="input-field" required>
                     <button type="submit" class="btn-primary bg-green-600">Kayıt Ol</button>
@@ -676,8 +703,8 @@
             </div>
         </div>
 
-        <!-- 3. PASSCODE -->
-        <div id="page-passcode" class="page-content hidden">
+        <!-- PASSCODE -->
+        <div id="page-passcode" class="page-content page-center hidden">
             <div class="glass-card p-12 max-w-sm text-center border-red-500/30">
                 <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
                 <h2 class="text-xl font-black mb-6 uppercase">ALİ ÇELİK ONAYI</h2>
@@ -688,113 +715,95 @@
             </div>
         </div>
 
-        <!-- 4. HOME -->
-        <div id="page-home" class="page-content hidden">
-            <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- HOME -->
+        <div id="page-home" class="page-content hidden pt-24">
+            <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- Sidebar -->
                 <div class="md:col-span-1 space-y-6">
                     <div class="glass-card !p-5 !rounded-2xl border-l-4 border-blue-500">
                         <h3 class="text-[10px] font-black uppercase text-blue-400 mb-2">Duyurular</h3>
-                        <p id="display-announcement" class="text-xs text-gray-300">...</p>
+                        <p id="home-ann" class="text-xs text-gray-300">...</p>
                     </div>
                     <div class="glass-card !p-5 !rounded-2xl border-l-4 border-purple-500">
                         <h3 class="text-[10px] font-black uppercase text-purple-400 mb-2">Günün Sözü</h3>
-                        <p id="display-quote" class="text-xs text-gray-300 italic">...</p>
+                        <p id="home-quote" class="text-xs text-gray-300 italic">...</p>
                     </div>
-                    <button id="nav-admin-btn" onclick="window.location.hash='#/admin'" class="w-full py-3 bg-blue-600/20 text-blue-300 rounded-xl font-bold uppercase text-xs hover:bg-blue-600/30 hidden">Yönetim Paneli</button>
                     
-                    <div id="superuser-tools" class="glass-card !p-5 !rounded-2xl hidden bg-red-900/10">
-                        <h3 class="text-[10px] font-black uppercase text-red-500 mb-4">SuperSU Kontrol</h3>
-                        <textarea id="edit-announcement" class="input-field text-xs h-20 bg-black/40 mb-2" placeholder="Duyuru..."></textarea>
-                        <input id="edit-quote" class="input-field text-xs bg-black/40 mb-3" placeholder="Söz...">
-                        <button id="btn-save-sys" onclick="window.saveSystemConfig()" class="btn-primary !py-3 text-[10px] bg-red-700">Güncelle</button>
+                    <button id="admin-link" onclick="window.location.hash='#/admin'" class="w-full py-3 bg-blue-900/30 text-blue-300 rounded-xl text-xs font-bold uppercase hidden">Admin Paneli</button>
+
+                    <div id="su-tools" class="glass-card !p-5 !rounded-2xl hidden bg-red-900/10">
+                        <h3 class="text-[10px] font-black uppercase text-red-500 mb-4">Sistem Yönetimi</h3>
+                        <textarea id="sys-ann-input" class="input-field text-xs h-20 bg-black/40 mb-2" placeholder="Duyuru..."></textarea>
+                        <input id="sys-quote-input" class="input-field text-xs bg-black/40 mb-3" placeholder="Söz...">
+                        <button onclick="window.saveSystemConfig()" class="btn-primary !py-3 text-[10px] bg-red-700">Güncelle</button>
                     </div>
                 </div>
-                
+
                 <!-- Feed -->
-                <div class="md:col-span-3 space-y-6">
-                    <div class="glass-card !p-6 !rounded-2xl">
-                        <input id="page-title" type="text" placeholder="Başlık..." class="input-field mb-3 bg-black/20">
-                        <textarea id="page-content" placeholder="Neler düşünüyorsun balım?" class="input-field h-24 bg-black/20 resize-none"></textarea>
-                        <div class="flex justify-end mt-3"><button id="btn-create-page" onclick="window.createPage()" class="btn-primary !w-auto !px-8 !py-3 text-xs">Paylaş</button></div>
+                <div class="md:col-span-3">
+                    <div class="glass-card !p-6 !rounded-2xl mb-6">
+                        <input id="post-title" type="text" placeholder="Başlık..." class="input-field mb-3 bg-white/5">
+                        <textarea id="post-content" placeholder="Neler düşünüyorsun balım?" class="input-field h-24 bg-white/5 resize-none"></textarea>
+                        <div class="flex justify-end mt-3"><button id="btn-post" onclick="window.createPost()" class="btn-primary !w-auto !px-8 !py-3 text-xs">Paylaş</button></div>
                     </div>
-                    <div id="pages-container" class="space-y-4"></div>
+                    <div id="feed-container" class="space-y-4"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 5. POST DETAIL -->
-        <div id="page-post-detail" class="page-content hidden">
+        <!-- POST DETAIL -->
+        <div id="page-post-detail" class="page-content hidden pt-24">
             <div class="w-full max-w-3xl">
-                <button onclick="window.history.back()" class="mb-4 text-xs font-bold text-gray-500 hover:text-white uppercase"><i data-lucide="arrow-left" class="w-3 h-3 inline"></i> Geri Dön</button>
-                <div id="detail-content" class="glass-card !p-8 !rounded-3xl"></div>
+                <button onclick="window.history.back()" class="mb-4 text-xs font-bold text-gray-500 hover:text-white uppercase flex items-center gap-1"><i data-lucide="arrow-left" class="w-3 h-3"></i> Geri</button>
+                <div id="detail-container" class="glass-card !p-8 !rounded-3xl"></div>
             </div>
         </div>
 
-        <!-- 6. ADMIN -->
-        <div id="page-admin" class="page-content hidden">
+        <!-- ADMIN -->
+        <div id="page-admin" class="page-content hidden pt-24">
             <div class="w-full max-w-5xl glass-card !p-8 !rounded-3xl">
-                <h2 class="text-2xl font-black uppercase mb-6 flex items-center gap-2"><i data-lucide="shield" class="w-6 h-6"></i> Yönetim Merkezi</h2>
+                <h2 class="text-xl font-black uppercase mb-6 flex items-center gap-2"><i data-lucide="shield" class="w-6 h-6"></i> Yönetim</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4">Kullanıcılar</h3>
-                        <div class="max-h-96 overflow-y-auto"><table class="w-full text-left text-xs"><tbody id="user-list-body"></tbody></table></div>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4">Kullanıcılar & Ban</h3>
+                        <div class="max-h-96 overflow-y-auto"><table class="w-full text-left text-xs"><tbody id="admin-users"></tbody></table></div>
                     </div>
                     <div>
-                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4">Bekleyen Talepler</h3>
-                        <div class="max-h-96 overflow-y-auto"><table class="w-full text-left text-xs"><tbody id="request-list-body"></tbody></table></div>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4">E-posta Talepleri</h3>
+                        <div class="max-h-96 overflow-y-auto"><table class="w-full text-left text-xs"><tbody id="admin-reqs"></tbody></table></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 7. PROFILE -->
-        <div id="page-profile" class="page-content hidden">
-            <div class="glass-card !p-8 !rounded-3xl max-w-md w-full">
-                <h2 class="text-xl font-black uppercase mb-6 text-center">Hesabım</h2>
-                <div class="bg-white/5 p-4 rounded-xl mb-6 text-center">
-                    <div id="prof-user" class="text-2xl font-black text-blue-400 mb-1">...</div>
-                    <div id="prof-email" class="text-sm text-gray-400">...</div>
+        <!-- PROFILE -->
+        <div id="page-profile" class="page-content hidden pt-24">
+            <div class="glass-card !p-8 !rounded-3xl max-w-md w-full text-center">
+                <h2 class="text-xl font-black uppercase mb-6">Hesabım</h2>
+                <div class="bg-white/5 p-4 rounded-xl mb-6">
+                    <div id="p-user" class="text-2xl font-black text-blue-400">...</div>
+                    <div id="p-email" class="text-sm text-gray-400">...</div>
                 </div>
-                
-                <h3 class="text-[10px] font-black uppercase text-gray-500 mb-2">E-posta Değişimi</h3>
-                <div class="flex gap-2 mb-6">
-                    <input id="new-email-req" type="email" placeholder="Yeni E-posta adresi" class="input-field !py-3 text-xs">
-                    <button onclick="window.requestEmailChange()" class="btn-primary !w-auto !px-4 !py-3 text-[10px] bg-purple-600">Talep Et</button>
-                </div>
-                <div class="text-[10px] text-gray-500 text-center leading-relaxed">
-                    E-posta değişim talebiniz yöneticilere iletilecektir.<br>Sonucu bildirim olarak alacaksınız balım.
+                <h3 class="text-[10px] font-black uppercase text-gray-500 mb-2">E-posta Değiştir</h3>
+                <div class="flex gap-2 mb-4">
+                    <input id="new-mail-input" type="email" placeholder="Yeni E-posta" class="input-field !py-3 text-xs">
+                    <button onclick="window.reqEmail()" class="btn-primary !w-auto !px-4 !py-3 text-[10px] bg-purple-600">Talep Et</button>
                 </div>
             </div>
         </div>
 
-        <!-- 8. NOTIFICATIONS -->
-        <div id="page-notifications" class="page-content hidden">
+        <!-- NOTIFICATIONS -->
+        <div id="page-notifications" class="page-content hidden pt-24">
             <div class="glass-card !p-8 !rounded-3xl max-w-lg w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-black uppercase">Bildirimler</h2>
-                    <button onclick="window.history.back()" class="text-xs text-gray-500 hover:text-white">Kapat</button>
+                    <button onclick="window.history.back()" class="text-xs text-gray-500">Kapat</button>
                 </div>
-                <div id="notif-list" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
+                <div id="notif-cont" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
             </div>
         </div>
-
     </main>
-    
-    <script>
-        // Navbar Visibility Logic
-        setInterval(() => {
-            const hash = window.location.hash;
-            const nav = document.getElementById('main-nav');
-            if(hash.includes('login') || hash.includes('register') || hash.includes('passcode') || hash === '') {
-                nav.classList.add('hidden');
-            } else {
-                nav.classList.remove('hidden');
-            }
-        }, 100);
-    </script>
 </body>
 </html>
-
 
 
