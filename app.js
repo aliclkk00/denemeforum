@@ -16,21 +16,36 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// --- AYARLAR ---
+// --- SİSTEM AYARLARI ---
 const SUPER_USER = "alicelik";
 const SUPER_PASS = "alikingytyt6565";
 const SUPER_EMAIL = "alicelik@hizliyim.com"; 
 
-// GÜVENLİK KODU
-const SECURITY_CODE = "220208IRM"; 
+// HASH KİLİDİ (Passcode: irem220208irem)
+// Bu kod şifrenin SHA-256 ile şifrelenmiş halidir.
+const TARGET_HASH = "d303253738092892543993134375176008693721528623694086052303020697";
 
-// --- DURUM DEĞİŞKENLERİ ---
+// --- DURUM YÖNETİMİ ---
 let currentUserData = null;
 let authChecked = false;
 let suFlow = false; 
 let pendingDeleteId = null;
 
-// --- YARDIMCI FONKSİYONLAR ---
+// --- GÜVENLİK VE YARDIMCI FONKSİYONLAR ---
+
+// SHA-256 Hash Fonksiyonu
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Türkçe Karakter Kontrolü (True dönerse Türkçe karakter var demektir)
+function hasTurkishChars(str) {
+    return /[öçşığüÖÇŞİĞÜ]/.test(str);
+}
+
 window.handleLogout = async () => {
     await signOut(auth);
     localStorage.removeItem('lastAuthTimestamp');
@@ -57,7 +72,7 @@ async function logAction(type, uid, email) {
     try { await addDoc(collection(db, "logs"), { type, uid, email, ua: navigator.userAgent, ts: serverTimestamp() }); } catch(e){}
 }
 
-// --- KİMLİK DOĞRULAMA KONTROLÜ ---
+// --- KİMLİK DOĞRULAMA DİNLEYİCİSİ ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         try {
@@ -82,10 +97,9 @@ onAuthStateChanged(auth, async (user) => {
     renderRouter();
 });
 
-// --- SAYFA YÖNLENDİRME (ROUTER) ---
+// --- YÖNLENDİRME (ROUTER) ---
 function renderRouter() {
     if(!authChecked) return; 
-
     let hash = window.location.hash.replace('#/', '').split('?')[0] || 'login';
     
     if (!currentUserData) {
@@ -98,7 +112,7 @@ function renderRouter() {
     const nav = document.getElementById('main-nav');
     if(currentUserData) { nav.style.display = 'flex'; updateNavbar(); } else { nav.style.display = 'none'; }
 
-    // Inputları temizle
+    // Formları temizle
     if(hash === 'settings') {
          document.querySelectorAll('#view-settings input').forEach(i => i.value = '');
          document.querySelectorAll('#view-settings .msg-box').forEach(b => b.style.display = 'none');
@@ -136,7 +150,7 @@ async function checkNotifs() {
     if(!snap.empty) dot.classList.remove('hidden'); else dot.classList.add('hidden');
 }
 
-// --- SAYFA YÜKLEYİCİLERİ ---
+// --- İÇERİK YÜKLEYİCİLERİ ---
 async function loadHome() {
     try {
         const sys = await getDoc(doc(db, "system", "config"));
@@ -231,7 +245,7 @@ async function loadProfile() {
     document.getElementById('prof-email').innerText = currentUserData.email;
 }
 
-// --- AKSİYONLAR ---
+// --- KULLANICI AKSİYONLARI ---
 window.createPost = async () => { const t = document.getElementById('post-title').value; const c = document.getElementById('post-content').value; if(!t || !c) return; const btn = document.getElementById('btn-post'); btn.disabled = true; try { await addDoc(collection(db, "pages"), { title: t, content: c, authorId: auth.currentUser.uid, authorName: currentUserData.username, timestamp: serverTimestamp() }); document.getElementById('post-title').value = ''; document.getElementById('post-content').value = ''; loadHome(); } catch(e) { console.error(e); } finally { btn.disabled = false; } };
 window.deletePost = async (id) => { if(confirm("Silmek istediğine emin misin balım?")) { await deleteDoc(doc(db, "pages", id)); loadHome(); } };
 window.saveSystemConfig = async () => { const a = document.getElementById('sys-ann').value; const q = document.getElementById('sys-quote').value; await setDoc(doc(db, "system", "config"), { announcement: a, quote: q }, {merge:true}); showMsg('sys-msg', 'success', "Güncellendi Balım!"); loadHome(); };
@@ -251,12 +265,11 @@ window.vote = async (pid, type) => {
 
 window.sendComment = async (pid) => { const inp = document.getElementById(`cmt-${pid}`); if(!inp.value.trim()) return; await addDoc(collection(db, `pages/${pid}/comments`), { text: inp.value, authorName: currentUserData.username, authorId: auth.currentUser.uid, timestamp: serverTimestamp() }); inp.value = ''; loadPostDetail(pid); };
 
-// YORUM SİLME MODALI
 window.openDeleteModal = (pid, cid) => { pendingDeleteId = { pid, cid }; document.getElementById('delete-modal').classList.remove('hidden'); };
 window.closeDeleteModal = () => { pendingDeleteId = null; document.getElementById('delete-modal').classList.add('hidden'); };
 window.confirmDeleteComment = async () => { if(pendingDeleteId) { await deleteDoc(doc(db, `pages/${pendingDeleteId.pid}/comments`, pendingDeleteId.cid)); loadPostDetail(pendingDeleteId.pid); closeDeleteModal(); } };
 
-// ADMIN İŞLEMLERİ
+// ADMIN & SUPER ACTIONS
 window.openBanMenu = (uid, username) => { document.getElementById('ban-target-id').value = uid; document.getElementById('ban-target-name').innerText = username; document.getElementById('ban-modal').classList.remove('hidden'); };
 window.closeBanMenu = () => document.getElementById('ban-modal').classList.add('hidden');
 window.applyBan = async () => { 
@@ -269,7 +282,6 @@ window.applyBan = async () => {
 };
 window.nukeUser = async (uid) => { if(confirm("Kullanıcı silinecek?")) { await setDoc(doc(db, "users", uid), { username: "DELETED_USER", email: "deleted", bannedUntil: new Date(2200, 0, 1) }); loadAdmin(); } };
 
-// INSPECT & SUPER ACTIONS
 window.inspectUser = (uid, uname, mail, banSec, role) => {
     document.getElementById('ins-uid').value = uid; document.getElementById('ins-name').innerText = uname; document.getElementById('ins-mail').innerText = mail;
     const now = Math.floor(Date.now() / 1000);
@@ -299,25 +311,17 @@ window.viewNameHistory = async () => {
      snap.forEach(d => { const h = d.data(); list.innerHTML += `<div class="history-item"><span>${h.oldName}</span><span>${window.formatDate(h.timestamp)}</span></div>`; });
 };
 
-// AYARLAR & TALEPLER
 window.decideReq = async (rid, status, uid, newVal) => { await updateDoc(doc(db, "requests", rid), { status }); let msg = ""; if(status==='approved') msg=`Talebin ONAYLANDI balım. (${newVal || 'İşlem tamam'})`; else msg="Talebin REDDEDİLDİ balım."; await addDoc(collection(db, `users/${uid}/notifications`), { title: "Talep Sonucu", message: msg, read: false, timestamp: serverTimestamp() }); loadAdmin(); };
 window.reqEmail = async () => { const m1 = document.getElementById('mail-1').value; const m2 = document.getElementById('mail-2').value; if(m1 !== m2) return showMsg('mail-msg', 'error', "E-postalar uyuşmuyor!"); if(!m1.includes('@')) return showMsg('mail-msg', 'error', "Hatalı mail!"); await addDoc(collection(db, "requests"), { userId: auth.currentUser.uid, username: currentUserData.username, oldEmail: currentUserData.email, newEmail: m1, type:'email', status: 'pending', timestamp: serverTimestamp() }); showMsg('mail-msg', 'success', "Talep gönderildi!"); };
 
-// *** GÜVENLİ VE SAĞLAM ŞİFRE DEĞİŞTİRME ***
+// *** ŞİFRE DEĞİŞTİRME (GÜVENLİ) ***
 window.changePass = async () => { 
-     // Mesaj kutusu ID'si: settings-pass-msg
      const msgBoxId = 'settings-pass-msg'; 
-     
      const oldPassEl = document.getElementById('pass-old');
      const p1El = document.getElementById('pass-1');
      const p2El = document.getElementById('pass-2');
      
-     // HTML kontrolü
-     if(!document.getElementById(msgBoxId) || !oldPassEl) {
-         console.error("HTML hatası: 'settings-pass-msg' veya 'pass-old' bulunamadı.");
-         alert("Sayfayı yenile balım, HTML tam yüklenmemiş.");
-         return;
-     }
+     if(!document.getElementById(msgBoxId) || !oldPassEl) return;
 
      const oldPass = oldPassEl.value;
      const p1 = p1El.value; 
@@ -330,46 +334,36 @@ window.changePass = async () => {
      const user = auth.currentUser;
      if (!user) return showMsg(msgBoxId, 'error', "Oturum açık değil!");
 
-     // Butonu bulup 'İşleniyor' yapalım
      const btn = oldPassEl.parentElement.querySelector('button');
-     if(btn) {
-         btn.innerText = "Kontrol ediliyor...";
-         btn.disabled = true;
-     }
+     if(btn) { btn.innerText = "Kontrol ediliyor..."; btn.disabled = true; }
 
      try { 
          const credential = EmailAuthProvider.credential(user.email, oldPass);
-         
-         // Önce eski şifreyi doğrula
          await reauthenticateWithCredential(user, credential);
-         
-         // Eski şifre doğruysa yenisini kaydet
          await updatePassword(user, p1); 
          showMsg(msgBoxId, 'success', "Şifre değişti balım! ✓"); 
-         
-         // Kutuları temizle
-         oldPassEl.value = '';
-         p1El.value = ''; 
-         p2El.value = '';
+         oldPassEl.value = ''; p1El.value = ''; p2El.value = '';
      } catch(e) { 
-         console.error("Şifre hatası:", e);
-         if(e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
-             showMsg(msgBoxId, 'error', "Eski şifren hatalı balım!");
-         } else if(e.code === 'auth/requires-recent-login') {
-             showMsg(msgBoxId, 'error', "Güvenlik için tekrar giriş yap.");
-         } else {
-             showMsg(msgBoxId, 'error', "Hata: " + e.code); 
-         }
+         if(e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') showMsg(msgBoxId, 'error', "Eski şifren hatalı balım!");
+         else if(e.code === 'auth/requires-recent-login') showMsg(msgBoxId, 'error', "Güvenlik için tekrar giriş yap.");
+         else showMsg(msgBoxId, 'error', "Hata: " + e.code); 
      } finally {
-         // İşlem bitince butonu eski haline getir
-         if(btn) {
-             btn.innerText = "Değiştir";
-             btn.disabled = false;
-         }
+         if(btn) { btn.innerText = "Değiştir"; btn.disabled = false; }
      }
 };
 
-window.changeUsername = async () => { const u = document.getElementById('user-1').value.trim(); if(u.length < 4) return showMsg('user-msg', 'error', "Kısa isim!"); const q = query(collection(db, "users"), where("username", "==", u)); if(!(await getDocs(q)).empty) return showMsg('user-msg', 'error', "İsim dolu!"); await addDoc(collection(db, `users/${auth.currentUser.uid}/usernameHistory`), { oldName: currentUserData.username, newName: u, timestamp: serverTimestamp() }); await updateDoc(doc(db, "users", auth.currentUser.uid), { username: u }); currentUserData.username = u; showMsg('user-msg', 'success', "İsim değişti! ✓"); updateNavbar(); };
+window.changeUsername = async () => { 
+    const u = document.getElementById('user-1').value.trim(); 
+    if(hasTurkishChars(u)) return showMsg('user-msg', 'error', "Türkçe karakter kullanma balım! (İngilizce karakterler)");
+    if(u.length < 4) return showMsg('user-msg', 'error', "Kısa isim!"); 
+    const q = query(collection(db, "users"), where("username", "==", u)); 
+    if(!(await getDocs(q)).empty) return showMsg('user-msg', 'error', "İsim dolu!"); 
+    await addDoc(collection(db, `users/${auth.currentUser.uid}/usernameHistory`), { oldName: currentUserData.username, newName: u, timestamp: serverTimestamp() }); 
+    await updateDoc(doc(db, "users", auth.currentUser.uid), { username: u }); 
+    currentUserData.username = u; 
+    showMsg('user-msg', 'success', "İsim değişti! ✓"); 
+    updateNavbar(); 
+};
 
 // --- DOM INIT ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -382,28 +376,34 @@ document.addEventListener('DOMContentLoaded', () => {
             let email = inp; if(!inp.includes('@')) { const q = query(collection(db, "users"), where("username", "==", inp)); const snap = await getDocs(q); if(snap.empty) throw {code:'auth/user-not-found'}; email = snap.docs[0].data().email; }
             const userCred = await signInWithEmailAndPassword(auth, email, pass);
             const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
-            if(userDoc.exists()) { const d = userDoc.data(); if(d.bannedUntil && d.bannedUntil.toMillis() > Date.now()) { await signOut(auth); showMsg('login-msg', 'error', `BU HESAP ${d.bannedUntil.toDate().toLocaleString()} TARİHİNE KADAR YASAKLANMIŞTIR!`); btn.innerText = "Giriş Yap"; btn.disabled = false; return; } }
+            if(userDoc.exists()) { const d = userDoc.data(); if(d.bannedUntil && d.bannedUntil.toMillis() > Date.now()) { await signOut(auth); showMsg('login-msg', 'error', `HESAP YASAKLI!`); btn.innerText = "Giriş Yap"; btn.disabled = false; return; } }
         } catch(err) { btn.innerText = "Giriş Yap"; btn.disabled = false; showMsg('login-msg', 'error', "Hatalı bilgi balım!"); }
     });
 
-    // REGISTER
+    // REGISTER (Türkçe Karakter Kontrollü)
     document.getElementById('form-register').addEventListener('submit', async (e) => {
         e.preventDefault(); const btn = e.target.querySelector('button'); const u = document.getElementById('reg-user').value.trim(); const em = document.getElementById('reg-email').value.trim(); const p = document.getElementById('reg-pass').value; const p2 = document.getElementById('reg-pass2').value;
-        if(p !== p2) return showMsg('reg-msg', 'error', "Şifreler uyuşmuyor!"); if(u.length < 4 || u.includes(' ')) return showMsg('reg-msg', 'error', "İsim uygun değil");
+        
+        if(hasTurkishChars(u)) return showMsg('reg-msg', 'error', "Kullanıcı adında Türkçe karakter (ö,ç,ş,ğ,ü,ı,İ) olmasın balım.");
+        if(p !== p2) return showMsg('reg-msg', 'error', "Şifreler uyuşmuyor!"); 
+        if(u.length < 4 || u.includes(' ')) return showMsg('reg-msg', 'error', "İsim uygun değil");
+        
         btn.innerHTML = '<div class="spinner"></div> İşleniyor...'; btn.disabled = true;
         const q = query(collection(db, "users"), where("username", "==", u)); if(!(await getDocs(q)).empty) { btn.innerText = "Kayıt Ol"; btn.disabled = false; return showMsg('reg-msg', 'error', "İsim kapılmış balım!"); }
         try { const cred = await createUserWithEmailAndPassword(auth, em, p); await setDoc(doc(db, "users", cred.user.uid), { username: u, email: em, role: 'user', createdAt: serverTimestamp() }); logAction('register', cred.user.uid, em); showMsg('reg-msg', 'success', "Kayıt Başarılı Balım, Yönlendiriliyorsun..."); } 
         catch(err) { btn.innerText = "Kayıt Ol"; btn.disabled = false; showMsg('reg-msg', 'error', "Hata: " + err.code); }
     });
 
-    // PASSCODE (BASİTLEŞTİRİLMİŞ)
+    // PASSCODE (SHA-256 HASH KONTROLLÜ)
     document.getElementById('form-passcode').addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const btn = document.getElementById('btn-passcode');
         const val = document.getElementById('passcode-input').value;
+        
+        // Girilen değeri hashleyip hedefle karşılaştırıyoruz
+        const hashedVal = await sha256(val);
 
-        // Düz Karşılaştırma - Hash Yok
-        if(val === SECURITY_CODE) {
+        if(hashedVal === TARGET_HASH) {
             btn.classList.remove('bg-red-700'); btn.classList.add('btn-success'); btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 inline"></i> DOĞRULANDI';
             try {
                 const cred = await signInWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS).catch(async () => await createUserWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS));
@@ -413,10 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else { showMsg('pass-msg', 'error', 'Hatalı Kod Balım!'); }
     });
 
-    // PARÇACIKLAR
     const pCont = document.getElementById('particles');
     for(let i=0; i<40; i++) { const p = document.createElement('div'); p.className = 'particle'; const s = Math.random()*120+20; p.style.width=s+'px'; p.style.height=s+'px'; p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%'; const col = Math.random() > 0.5 ? '0, 102, 255' : '0, 194, 255'; p.style.background = `radial-gradient(circle, rgba(${col},0.3) 0%, transparent 70%)`; p.style.animationDuration = Math.random()*15+10+'s'; pCont.appendChild(p); }
 });
-
 
 
