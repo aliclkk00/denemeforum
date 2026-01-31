@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>hizliyim.com - Final Pro System</title>
+    <title>hizliyim.com</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -60,9 +60,9 @@
                 <h1 class="text-3xl logo-text mb-6">YENİ HESAP</h1>
                 <div id="reg-msg" class="msg-box mb-4"></div>
                 <form id="form-register" class="space-y-4 text-left">
-                    <input type="text" id="reg-user" placeholder="Kullanıcı Adı" class="input-field" required>
+                    <input type="text" id="reg-user" placeholder="Kullanıcı Adı (İngilizce karakter)" class="input-field" required>
                     <input type="email" id="reg-email" placeholder="E-posta Adresi" class="input-field" required>
-                    <input type="password" id="reg-pass" placeholder="Şifre" class="input-field" required>
+                    <input type="password" id="reg-pass" placeholder="Şifre (Min 6)" class="input-field" required>
                     <input type="password" id="reg-pass2" placeholder="Şifre Tekrar" class="input-field" required>
                     <button type="submit" class="btn-primary bg-green-600 hover:bg-green-500">Kayıt Ol</button>
                 </form>
@@ -70,14 +70,15 @@
             </div>
         </div>
 
-        <!-- PASSCODE -->
+        <!-- PASSCODE (SECURE) -->
         <div id="view-passcode" class="page-section">
             <div class="glass-card p-12 max-w-sm text-center border-red-500/30">
                 <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse"></i>
-                <h2 class="text-xl font-black mb-6 uppercase text-red-400">ALİ ÇELİK ONAYI</h2>
+                <h2 class="text-xl font-black mb-6 uppercase text-red-400">GÜVENLİK DUVARI</h2>
                 <div id="pass-msg" class="msg-box mb-4"></div>
                 <form id="form-passcode">
-                    <input type="password" id="passcode-input" placeholder="GÜVENLİK KODU" class="input-field text-center font-mono tracking-[8px] text-xl" required>
+                    <input type="password" id="passcode-input" placeholder="ERİŞİM KODU" class="input-field text-center font-mono tracking-[8px] text-xl" required>
+                    <p class="text-[9px] text-gray-500 mt-2">IP Adresiniz Loglanmaktadır.</p>
                     <button id="btn-passcode" type="submit" class="btn-primary mt-6 bg-red-700 hover:bg-red-600">DOĞRULA</button>
                 </form>
             </div>
@@ -201,7 +202,7 @@
             </div>
         </div>
 
-        <!-- SETTINGS (DÜZELTİLDİ: Mesaj ID'si ve Eski Şifre) -->
+        <!-- SETTINGS -->
         <div id="view-settings" class="page-section">
              <div class="glass-card !p-8 !rounded-3xl max-w-md w-full">
                 <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
@@ -222,13 +223,12 @@
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Kullanıcı Adı Değiştir</label>
                         <div id="user-msg" class="msg-box"></div>
                         <div class="flex gap-2 mt-1">
-                            <input id="user-1" type="text" placeholder="Yeni Kullanıcı Adı" class="input-field !py-3 text-xs">
+                            <input id="user-1" type="text" placeholder="Yeni Kullanıcı Adı (Türkçe karakter yok)" class="input-field !py-3 text-xs">
                             <button onclick="window.changeUsername()" class="btn-primary !w-auto !px-4 !py-3 text-[10px] bg-teal-600 hover:bg-teal-500">Değiştir</button>
                         </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Şifre Değiştir</label>
-                        <!-- YENİ İSİM BURADA: settings-pass-msg -->
                         <div id="settings-pass-msg" class="msg-box"></div>
                         <div class="flex flex-col gap-2 mt-1">
                             <input id="pass-old" type="password" placeholder="Mevcut Şifren" class="input-field !py-3 text-xs">
@@ -270,6 +270,5 @@
     <script type="module" src="app.js"></script>
 </body>
 </html>
-
 
 
