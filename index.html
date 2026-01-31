@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>hizliyim.com - Final V3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root { --brand: #0066FF; --brand-glow: #00C2FF; }
+        body { 
+            background: #02040a; 
+            color: white; font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        #app-container {
+            position: relative; width: 100%; min-height: 100vh;
+            display: flex; flex-direction: column; z-index: 10;
+        }
+
+        .page-section {
+            display: none; width: 100%; min-height: 100vh;
+            padding: 1.5rem; padding-top: 5rem; 
+            animation: fadeIn 0.4s ease-out; justify-content: center;
+        }
+
+        #view-login, #view-register, #view-passcode { align-items: center; padding-top: 0; }
+        .page-section.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-card { 
+            background: rgba(13, 17, 30, 0.96); backdrop-filter: blur(30px);
+            border: 1px solid rgba(0, 102, 255, 0.15); border-top: 1px solid rgba(0, 102, 255, 0.3);
+            border-radius: 24px; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            width: 100%; position: relative; z-index: 20;
+        }
+
+        .logo-text { 
+            font-weight: 900; background: linear-gradient(to right, #fff, var(--brand-glow), #fff); 
+            -webkit-background-clip: text; color: transparent; background-size: 200%; 
+            animation: shine 4s linear infinite; letter-spacing: -1px;
+        }
+        @keyframes shine { to { background-position: -200% center; } }
+
+        .input-field { 
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; padding: 16px; border-radius: 16px; width: 100%; outline: none; transition: 0.3s; font-size: 0.95rem; 
+        }
+        .input-field:focus { border-color: var(--brand); box-shadow: 0 0 20px rgba(0, 102, 255, 0.2); background: rgba(0, 102, 255, 0.05); }
+
+        .btn-primary { 
+            background: var(--brand); padding: 16px; border-radius: 16px; width: 100%; 
+            font-weight: 800; text-transform: uppercase; letter-spacing: 1px; 
+            position: relative; overflow: hidden; cursor: pointer; transition: 0.2s; border: none; color: white;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:hover:not(:disabled) { box-shadow: 0 0 30px rgba(0, 102, 255, 0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-success { background: #10b981 !important; box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); }
+
+        .btn-primary::after { 
+            content:''; position:absolute; top:0; left:-150%; width:100%; height:100%; 
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent); 
+            transform:skewX(-20deg); animation: btnShine 3s infinite; 
+        }
+        @keyframes btnShine { 0%{left:-150%} 20%{left:150%} 100%{left:150%} }
+
+        #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .particle { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(15px); opacity: 0.6; animation: float 10s infinite ease-in-out alternate; }
+        @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px, -40px) scale(1.3); } }
+
+        .nav-fixed { 
+            position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+            background: rgba(2, 4, 10, 0.95); backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.8rem 1rem; 
+            display: none; 
+        }
+
+        .msg-box { 
+            font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; text-align: center; 
+            display: none; padding: 14px; border-radius: 12px; animation: slideDown 0.3s ease; line-height: 1.4;
+        }
+        .msg-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .msg-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000;
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, updateDoc, query, orderBy, serverTimestamp, deleteDoc, where, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCP0Rd8CAfzYRPtakfdQWBqS5uBn045XpE",
+            authDomain: "hizliyimforum.firebaseapp.com",
+            databaseURL: "https://hizliyimforum-default-rtdb.firebaseio.com",
+            projectId: "hizliyimforum",
+            storageBucket: "hizliyimforum.firebasestorage.app",
+            messagingSenderId: "903963422468",
+            appId: "1:903963422468:web:936c368393585efd0cea51"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // CONFIG
+        const SUPER_USER = "alicelik";
+        const SUPER_PASS = "alikingytyt6565";
+        const SECURITY_CODE = "220208İRM";
+        const SUPER_EMAIL = "alicelik@hizliyim.com"; 
+
+        // STATE
+        let currentUserData = null;
+        let authChecked = false;
+        let suFlow = false; 
+
+        // --- GLOBAL ACTIONS ---
+        window.handleLogout = async () => {
+            await signOut(auth);
+            localStorage.removeItem('lastAuthTimestamp');
+            window.location.hash = '#/login';
+            window.location.reload(); 
+        };
+
+        window.formatDate = (ts) => {
+            if(!ts) return '';
+            return new Date(ts.seconds * 1000).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+        };
+
+        function showMsg(id, type, text) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.className = `msg-box ${type === 'success' ? 'msg-success' : 'msg-error'}`;
+            el.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-4 h-4 inline"></i> ${text}` : `<i data-lucide="alert-triangle" class="w-4 h-4 inline"></i> ${text}`;
+            el.style.display = 'block';
+            if(window.lucide) window.lucide.createIcons();
+            if(!text.includes('YASAK')) setTimeout(() => { if(el) el.style.display = 'none'; }, 3500);
+        }
+
+        async function logAction(type, uid, email) {
+            try { await addDoc(collection(db, "logs"), { type, uid, email, ua: navigator.userAgent, ts: serverTimestamp() }); } catch(e){}
+        }
+
+        // --- AUTH CHECKER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const snap = await getDoc(doc(db, "users", user.uid));
+                    if(snap.exists()) {
+                        const d = snap.data();
+                        const now = Date.now();
+                        
+                        if(d.bannedUntil && d.bannedUntil.toMillis() > now) {
+                            await signOut(auth); currentUserData = null;
+                        } else if(d.username === "DELETED_USER") {
+                            await signOut(auth); currentUserData = null;
+                        } else {
+                            currentUserData = d;
+                            updateDoc(doc(db, "users", user.uid), { lastLogin: serverTimestamp() });
+                        }
+                    } else if (user.email === SUPER_EMAIL) {
+                        currentUserData = { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' };
+                    }
+                } catch(e) { console.error(e); }
+            } else { currentUserData = null; }
+            
+            authChecked = true;
+            renderRouter();
+        });
+
+        // --- ROUTER ---
+        function renderRouter() {
+            if(!authChecked) return; 
+
+            let hash = window.location.hash.replace('#/', '').split('?')[0] || 'login';
+            
+            if (!currentUserData) {
+                if (hash === 'passcode' && suFlow) { /* Allow */ } 
+                else if (!['login', 'register'].includes(hash)) { hash = 'login'; window.history.replaceState(null, null, '#/login'); }
+            } else {
+                if (['login', 'register', 'passcode'].includes(hash)) { hash = 'home'; window.history.replaceState(null, null, '#/home'); }
+            }
+
+            const nav = document.getElementById('main-nav');
+            if(currentUserData) { nav.style.display = 'flex'; updateNavbar(); } else { nav.style.display = 'none'; }
+
+            // RESET INPUTS ON VIEW CHANGE
+            if(hash === 'settings') {
+                 document.querySelectorAll('#view-settings input').forEach(i => i.value = '');
+                 document.querySelectorAll('#view-settings .msg-box').forEach(b => b.style.display = 'none');
+            }
+
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(`view-${hash}`);
+            if(target) {
+                target.classList.add('active');
+                if(hash === 'home') loadHome();
+                if(hash === 'admin') loadAdmin();
+                if(hash === 'post-detail') { const params = new URLSearchParams(window.location.hash.split('?')[1]); loadPostDetail(params.get('id')); }
+                if(hash === 'notifications') loadNotifications();
+                if(hash === 'profile') loadProfile();
+            }
+
+            if(window.lucide) window.lucide.createIcons();
+        }
+        window.addEventListener('hashchange', renderRouter);
+
+        // --- UI FUNCTIONS ---
+        function updateNavbar() {
+            document.getElementById('nav-username').innerText = currentUserData.username;
+            const badge = document.getElementById('nav-role');
+            let txt="User", col="bg-gray-700 text-gray-300";
+            if(currentUserData.role === 'admin') { txt="Admin"; col="bg-blue-900 text-blue-300"; }
+            if(currentUserData.role === 'superuser') { txt="SuperSU"; col="bg-red-900 text-red-300"; }
+            badge.className = `text-[10px] font-black uppercase px-2 py-1 rounded ${col}`; badge.innerText = txt;
+            checkNotifs();
+        }
+
+        async function checkNotifs() {
+            if(!auth.currentUser) return;
+            const q = query(collection(db, `users/${auth.currentUser.uid}/notifications`), where("read", "==", false));
+            const snap = await getDocs(q);
+            const dot = document.getElementById('notif-dot');
+            if(!snap.empty) dot.classList.remove('hidden'); else dot.classList.add('hidden');
+        }
+
+        // --- PAGE LOADERS ---
+        async function loadHome() {
+            try {
+                const sys = await getDoc(doc(db, "system", "config"));
+                if(sys.exists()) {
+                    document.getElementById('ann-text').innerText = sys.data().announcement || "Duyuru yok balım.";
+                    document.getElementById('quote-text').innerText = sys.data().quote || "Söz yok balım.";
+                    if(currentUserData.role === 'superuser') {
+                        document.getElementById('sys-ann').value = sys.data().announcement || "";
+                        document.getElementById('sys-quote').value = sys.data().quote || "";
+                    }
+                }
+            } catch(e){}
+            document.getElementById('su-panel').classList.toggle('hidden', currentUserData.role !== 'superuser');
+            document.getElementById('admin-btn').classList.toggle('hidden', currentUserData.role === 'user');
+            const container = document.getElementById('feed');
+            container.innerHTML = '<div class="text-center py-10"><div class="spinner"></div></div>';
+            const q = query(collection(db, "pages"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            container.innerHTML = '';
+            if(snap.empty) { container.innerHTML = '<div class="text-center text-gray-500 mt-10">Henüz paylaşım yok balım.</div>'; return; }
+            snap.forEach(d => {
+                const p = d.data();
+                const canDelete = currentUserData.role === 'superuser' || (currentUserData.role === 'admin' && p.authorId === auth.currentUser.uid) || p.authorId === auth.currentUser.uid;
+                const isLong = p.content.length > 150;
+                const div = document.createElement('div');
+                div.className = "glass-card !p-5 mb-4 hover:bg-white/5 transition-colors";
+                div.innerHTML = `<div class="flex justify-between items-start mb-2"><h4 onclick="window.location.hash='#/post-detail?id=${d.id}'" class="font-bold text-lg text-blue-300 cursor-pointer break-words flex-1 pr-4 hover:underline">${p.title}</h4>${canDelete ? `<button onclick="window.deletePost('${d.id}')" class="text-red-500 opacity-50 hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div><p class="text-gray-300 text-sm whitespace-pre-wrap break-words ${isLong ? 'line-clamp-3' : ''}">${p.content}</p>${isLong ? `<button onclick="this.previousElementSibling.classList.toggle('line-clamp-3'); this.innerText = this.innerText.includes('Devam') ? 'Kısalt' : 'Devamını Oku...'" class="text-xs text-blue-400 font-bold mt-1 hover:underline">Devamını Oku...</button>` : ''}<div class="mt-4 flex justify-between items-center border-t border-white/10 pt-3"><span class="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${p.authorName}</span><div class="flex items-center gap-3"><div class="flex gap-3 text-xs font-bold text-gray-400"><span class="flex items-center gap-1"><i data-lucide="thumbs-up" class="w-3 h-3 text-green-500"></i> ${p.likeCount || 0}</span><span class="flex items-center gap-1"><i data-lucide="thumbs-down" class="w-3 h-3 text-red-500"></i> ${p.dislikeCount || 0}</span></div><span class="text-[9px] text-gray-600">${window.formatDate(p.timestamp)}</span></div></div>`;
+                container.appendChild(div);
+            });
+            if(window.lucide) window.lucide.createIcons();
+        }
+
+        async function loadPostDetail(id) {
+            const container = document.getElementById('post-detail-cont');
+            container.innerHTML = '<div class="spinner mx-auto"></div>';
+            const snap = await getDoc(doc(db, "pages", id));
+            if(!snap.exists()) { container.innerHTML = "Silinmiş."; return; }
+            const p = snap.data();
+            container.innerHTML = `<h2 class="text-2xl font-black mb-2 break-words text-white">${p.title}</h2><div class="text-xs text-gray-500 mb-6 flex gap-4 uppercase font-bold"><span>${p.authorName}</span><span>${window.formatDate(p.timestamp)}</span></div><div class="bg-white/5 p-4 rounded-xl text-gray-200 whitespace-pre-wrap break-words mb-6 border border-white/10">${p.content}</div><div class="flex gap-2 mb-8"><button onclick="window.vote('${id}', 'like')" class="flex-1 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-xl font-bold flex justify-center gap-2 transition"><i data-lucide="thumbs-up" class="w-4 h-4"></i> Like (${p.likeCount||0})</button><button onclick="window.vote('${id}', 'dislike')" class="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold flex justify-center gap-2 transition"><i data-lucide="thumbs-down" class="w-4 h-4"></i> Dislike (${p.dislikeCount||0})</button></div><h3 class="font-bold border-b border-white/10 pb-2 mb-4">Yorumlar</h3><div id="comments-${id}" class="space-y-3 mb-6 max-h-60 overflow-y-auto"></div><div class="flex gap-2"><input id="cmt-${id}" class="input-field !py-2" placeholder="Yorum yaz balım..."><button onclick="window.sendComment('${id}')" class="btn-primary !w-auto !px-4 bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button></div>`;
+            const cSnap = await getDocs(query(collection(db, `pages/${id}/comments`), orderBy("timestamp", "asc")));
+            const cList = document.getElementById(`comments-${id}`);
+            cSnap.forEach(cd => { const c = cd.data(); cList.innerHTML += `<div class="bg-black/30 p-3 rounded-lg border border-white/5"><div class="flex justify-between text-[9px] text-gray-500 uppercase font-bold mb-1"><span>${c.authorName}</span><span>${window.formatDate(c.timestamp)}</span></div><div class="text-sm text-gray-300 break-words">${c.text}</div></div>`; });
+            if(window.lucide) window.lucide.createIcons();
+        }
+
+        async function loadAdmin() {
+            const uTbody = document.getElementById('admin-users'); uTbody.innerHTML = '';
+            const uSnap = await getDocs(collection(db, "users"));
+            uSnap.forEach(d => {
+                const u = d.data();
+                if(u.username === 'DELETED_USER') return; // Hide Deleted Users
+                uTbody.innerHTML += `<tr class="border-b border-white/5"><td class="p-3">${u.username}</td><td class="p-3 text-[10px] uppercase font-bold ${u.role==='superuser'?'text-red-400':'text-blue-400'}">${u.role}</td><td class="p-3 flex items-center gap-2">${(currentUserData.role==='superuser' || (currentUserData.role==='admin' && u.role==='user')) ? `<div class="flex gap-1"><button onclick="window.openBanMenu('${d.id}', '${u.username}')" class="bg-red-900/30 text-red-400 p-2 rounded text-[10px] hover:bg-red-900/50">Yasakla</button>${currentUserData.role==='superuser' ? `<button onclick="window.inspectUser('${d.id}', '${u.username}', '${u.email}', '${u.bannedUntil ? u.bannedUntil.seconds : 0}')" class="bg-blue-900/30 text-blue-400 p-2 rounded text-[10px] hover:bg-blue-900/50">İncele</button><button onclick="window.nukeUser('${d.id}')" class="bg-red-950/50 text-red-600 p-2 rounded text-[10px] hover:bg-red-900"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}</div>` : '-'}</td></tr>`;
+            });
+            const rTbody = document.getElementById('admin-reqs'); rTbody.innerHTML = '';
+            const rSnap = await getDocs(query(collection(db, "requests"), where("status", "==", "pending")));
+            if(rSnap.empty) rTbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-gray-500 text-xs">Talep yok.</td></tr>';
+            rSnap.forEach(d => { const r = d.data(); rTbody.innerHTML += `<tr class="border-b border-white/5"><td class="p-3">${r.username}</td><td class="p-3 text-xs opacity-60">${r.newEmail || r.type || 'Talep'}</td><td class="p-3 flex gap-2"><button onclick="window.decideReq('${d.id}', 'approved', '${r.userId}', '${r.newEmail}')" class="text-green-400 bg-green-900/20 p-1 rounded"><i data-lucide="check" class="w-3 h-3"></i></button><button onclick="window.decideReq('${d.id}', 'rejected', '${r.userId}')" class="text-red-400 bg-red-900/20 p-1 rounded"><i data-lucide="x" class="w-3 h-3"></i></button></td></tr>`; });
+            if(window.lucide) window.lucide.createIcons();
+        }
+
+        async function loadNotifications() {
+            const cont = document.getElementById('notif-cont');
+            const q = query(collection(db, `users/${auth.currentUser.uid}/notifications`), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            cont.innerHTML = '';
+            if(snap.empty) { cont.innerHTML = '<div class="text-center text-gray-500">Bildirim yok balım.</div>'; return; }
+            snap.forEach(d => { const n = d.data(); cont.innerHTML += `<div class="bg-white/5 p-3 rounded-xl mb-2 border-l-2 ${n.read ? 'border-gray-600' : 'border-blue-500'}"><h4 class="font-bold text-sm">${n.title}</h4><p class="text-xs text-gray-300 mt-1">${n.message}</p><div class="text-[9px] text-gray-600 text-right mt-1">${window.formatDate(n.timestamp)}</div></div>`; updateDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${d.id}`), { read: true }); });
+            document.getElementById('notif-dot').classList.add('hidden');
+        }
+
+        async function loadProfile() {
+            document.getElementById('prof-user').innerText = currentUserData.username;
+            document.getElementById('prof-email').innerText = currentUserData.email;
+        }
+
+        // --- GLOBAL FUNCTIONS ---
+        window.createPost = async () => { const t = document.getElementById('post-title').value; const c = document.getElementById('post-content').value; if(!t || !c) return; const btn = document.getElementById('btn-post'); btn.disabled = true; try { await addDoc(collection(db, "pages"), { title: t, content: c, authorId: auth.currentUser.uid, authorName: currentUserData.username, timestamp: serverTimestamp() }); document.getElementById('post-title').value = ''; document.getElementById('post-content').value = ''; loadHome(); } catch(e) { console.error(e); } finally { btn.disabled = false; } };
+        window.deletePost = async (id) => { if(confirm("Silmek istediğine emin misin balım?")) { await deleteDoc(doc(db, "pages", id)); loadHome(); } };
+        window.saveSystemConfig = async () => { const a = document.getElementById('sys-ann').value; const q = document.getElementById('sys-quote').value; await setDoc(doc(db, "system", "config"), { announcement: a, quote: q }, {merge:true}); showMsg('sys-msg', 'success', "Güncellendi Balım!"); loadHome(); };
+        window.vote = async (pid, type) => { const uid = auth.currentUser.uid; const voteRef = doc(db, `pages/${pid}/votes/${uid}`); const postRef = doc(db, "pages", pid); try { await runTransaction(db, async(t) => { const vDoc = await t.get(voteRef); const pDoc = await t.get(postRef); if(!pDoc.exists()) return; let l = pDoc.data().likeCount || 0; let d = pDoc.data().dislikeCount || 0; if(vDoc.exists()) { if(vDoc.data().type === type) return; if(vDoc.data().type === 'like') l--; else d--; } if(type === 'like') l++; else d++; t.set(voteRef, { type }); t.update(postRef, { likeCount: l, dislikeCount: d }); }); loadPostDetail(pid); } catch(e) { console.error(e); } };
+        window.sendComment = async (pid) => { const inp = document.getElementById(`cmt-${pid}`); if(!inp.value.trim()) return; await addDoc(collection(db, `pages/${pid}/comments`), { text: inp.value, authorName: currentUserData.username, timestamp: serverTimestamp() }); inp.value = ''; loadPostDetail(pid); };
+        
+        // ADMIN
+        window.openBanMenu = (uid, username) => { document.getElementById('ban-target-id').value = uid; document.getElementById('ban-target-name').innerText = username; document.getElementById('ban-modal').classList.remove('hidden'); };
+        window.closeBanMenu = () => document.getElementById('ban-modal').classList.add('hidden');
+        window.applyBan = async () => { const uid = document.getElementById('ban-target-id').value; const type = document.getElementById('ban-type').value; const val = parseInt(document.getElementById('ban-val').value); let ms = 0; if(type==='min') ms=val*60000; if(type==='hour') ms=val*3600000; if(type==='day') ms=val*86400000; await updateDoc(doc(db, "users", uid), { bannedUntil: new Date(Date.now()+ms) }); closeBanMenu(); loadAdmin(); };
+        window.nukeUser = async (uid) => { if(confirm("Kullanıcı silinecek?")) { await setDoc(doc(db, "users", uid), { username: "DELETED_USER", email: "deleted", bannedUntil: new Date(2200, 0, 1) }); loadAdmin(); } };
+        
+        // SUPERSU INSPECT
+        window.inspectUser = (uid, uname, mail, banSec) => {
+            document.getElementById('ins-uid').value = uid; document.getElementById('ins-name').innerText = uname; document.getElementById('ins-mail').innerText = mail;
+            document.getElementById('ins-ban').innerText = banSec > 0 ? new Date(banSec*1000).toLocaleString() : 'Yok';
+            document.getElementById('inspect-modal').classList.remove('hidden');
+        };
+        window.closeInspect = () => document.getElementById('inspect-modal').classList.add('hidden');
+        window.sendUserNotif = async () => {
+            const uid = document.getElementById('ins-uid').value; const msg = document.getElementById('ins-notif-msg').value; if(!msg) return;
+            await addDoc(collection(db, `users/${uid}/notifications`), { title: "Yönetici Mesajı", message: msg, read: false, timestamp: serverTimestamp() });
+            document.getElementById('ins-notif-msg').value = ''; alert("Bildirim gitti!"); closeInspect();
+        };
+
+        // SETTINGS & REQUESTS
+        window.decideReq = async (rid, status, uid, newVal) => {
+            await updateDoc(doc(db, "requests", rid), { status });
+            let msg = ""; if(status==='approved') msg=`Talebin ONAYLANDI balım. (${newVal || 'İşlem tamam'})`; else msg="Talebin REDDEDİLDİ balım.";
+            await addDoc(collection(db, `users/${uid}/notifications`), { title: "Talep Sonucu", message: msg, read: false, timestamp: serverTimestamp() }); loadAdmin();
+        };
+
+        window.reqEmail = async () => {
+            const m1 = document.getElementById('mail-1').value; const m2 = document.getElementById('mail-2').value;
+            if(m1 !== m2) return showMsg('mail-msg', 'error', "E-postalar uyuşmuyor!"); if(!m1.includes('@')) return showMsg('mail-msg', 'error', "Hatalı mail!");
+            await addDoc(collection(db, "requests"), { userId: auth.currentUser.uid, username: currentUserData.username, oldEmail: currentUserData.email, newEmail: m1, type:'email', status: 'pending', timestamp: serverTimestamp() });
+            showMsg('mail-msg', 'success', "Talep gönderildi!");
+        };
+        window.changePass = async () => {
+             const p1 = document.getElementById('pass-1').value; const p2 = document.getElementById('pass-2').value;
+             if(p1 !== p2) return showMsg('pass-msg', 'error', "Şifreler uyuşmuyor!"); if(p1.length < 6) return showMsg('pass-msg', 'error', "En az 6 karakter!");
+             try { await updatePassword(auth.currentUser, p1); showMsg('pass-msg', 'success', "Şifren değişti balım! ✓"); } catch(e) { showMsg('pass-msg', 'error', "Hata: Yeniden giriş yap."); }
+        };
+        window.changeUsername = async () => {
+            const u = document.getElementById('user-1').value.trim(); if(u.length < 4) return showMsg('user-msg', 'error', "Kısa isim!");
+            const q = query(collection(db, "users"), where("username", "==", u));
+            if(!(await getDocs(q)).empty) return showMsg('user-msg', 'error', "İsim dolu!");
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { username: u }); currentUserData.username = u; showMsg('user-msg', 'success', "İsim değişti! ✓"); loadProfile();
+        };
+
+        // --- DOM INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('form-login').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button'); const inp = document.getElementById('login-input').value.trim(); const pass = document.getElementById('login-password').value;
+                if(inp === SUPER_USER && pass === SUPER_PASS) { suFlow = true; window.location.hash = '#/passcode'; return; }
+                btn.innerHTML = '<div class="spinner"></div> İşleniyor...'; btn.disabled = true;
+                try {
+                    let email = inp;
+                    if(!inp.includes('@')) { const q = query(collection(db, "users"), where("username", "==", inp)); const snap = await getDocs(q); if(snap.empty) throw {code:'auth/user-not-found'}; email = snap.docs[0].data().email; }
+                    const userCred = await signInWithEmailAndPassword(auth, email, pass);
+                    const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                    if(userDoc.exists()) {
+                        const d = userDoc.data();
+                        if(d.bannedUntil && d.bannedUntil.toMillis() > Date.now()) {
+                            await signOut(auth); showMsg('login-msg', 'error', `BU HESAP ${d.bannedUntil.toDate().toLocaleString()} TARİHİNE KADAR YASAKLANMIŞTIR!`); btn.innerText = "Giriş Yap"; btn.disabled = false; return;
+                        }
+                    }
+                } catch(err) { btn.innerText = "Giriş Yap"; btn.disabled = false; showMsg('login-msg', 'error', "Hatalı bilgi balım!"); }
+            });
+
+            document.getElementById('form-register').addEventListener('submit', async (e) => {
+                e.preventDefault(); const btn = e.target.querySelector('button'); const u = document.getElementById('reg-user').value.trim(); const em = document.getElementById('reg-email').value.trim(); const p = document.getElementById('reg-pass').value; const p2 = document.getElementById('reg-pass2').value;
+                if(p !== p2) return showMsg('reg-msg', 'error', "Şifreler uyuşmuyor!"); if(u.length < 4 || u.includes(' ')) return showMsg('reg-msg', 'error', "İsim uygun değil");
+                btn.innerHTML = '<div class="spinner"></div> İşleniyor...'; btn.disabled = true;
+                const q = query(collection(db, "users"), where("username", "==", u)); if(!(await getDocs(q)).empty) { btn.innerText = "Kayıt Ol"; btn.disabled = false; return showMsg('reg-msg', 'error', "İsim kapılmış balım!"); }
+                try { const cred = await createUserWithEmailAndPassword(auth, em, p); await setDoc(doc(db, "users", cred.user.uid), { username: u, email: em, role: 'user', createdAt: serverTimestamp() }); logAction('register', cred.user.uid, em); showMsg('reg-msg', 'success', "Kayıt Başarılı Balım, Yönlendiriliyorsun..."); } 
+                catch(err) { btn.innerText = "Kayıt Ol"; btn.disabled = false; showMsg('reg-msg', 'error', "Hata: " + err.code); }
+            });
+
+            document.getElementById('form-passcode').addEventListener('submit', async (e) => {
+                e.preventDefault(); const btn = document.getElementById('btn-passcode');
+                if(document.getElementById('passcode-input').value === SECURITY_CODE) {
+                    btn.classList.remove('bg-red-700'); btn.classList.add('btn-success'); btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 inline"></i> DOĞRULANDI';
+                    try {
+                        const cred = await signInWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS).catch(async () => await createUserWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS));
+                        await setDoc(doc(db, "users", cred.user.uid), { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' }, {merge:true});
+                        setTimeout(() => window.location.hash = '#/home', 1000);
+                    } catch(err) { showMsg('pass-msg', 'error', err.message); }
+                } else { showMsg('pass-msg', 'error', 'Hatalı Kod Balım!'); }
+            });
+
+            const pCont = document.getElementById('particles');
+            for(let i=0; i<40; i++) { const p = document.createElement('div'); p.className = 'particle'; const s = Math.random()*120+20; p.style.width=s+'px'; p.style.height=s+'px'; p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%'; const col = Math.random() > 0.5 ? '0, 102, 255' : '0, 194, 255'; p.style.background = `radial-gradient(circle, rgba(${col},0.3) 0%, transparent 70%)`; p.style.animationDuration = Math.random()*15+10+'s'; pCont.appendChild(p); }
+        });
+    </script>
+</head>
+<body>
+    <div id="particles"></div>
+
+    <nav id="main-nav" class="nav-fixed hidden flex justify-between items-center">
+        <div class="flex items-center gap-4"><span class="logo-text text-xl cursor-pointer" onclick="window.location.hash='#/home'">hizliyim.com</span><div id="nav-role"></div></div>
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.hash='#/notifications'" class="relative text-gray-400 hover:text-white transition"><i data-lucide="bell" class="w-5 h-5"></i><span id="notif-dot" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden"></span></button>
+            <button onclick="window.location.hash='#/profile'" class="flex items-center gap-2 text-sm font-bold text-gray-300 hover:text-white transition"><i data-lucide="user-circle" class="w-5 h-5"></i> <span id="nav-username" class="hidden sm:inline">...</span></button>
+            <button onclick="window.handleLogout()" class="text-red-500 hover:text-red-400 transition"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+        </div>
+    </nav>
+
+    <div id="app-container">
+        <!-- LOGIN -->
+        <div id="view-login" class="page-section active">
+            <div class="glass-card p-10 max-w-sm text-center">
+                <h1 class="text-4xl logo-text mb-2">hizliyim.com</h1>
+                <p class="text-blue-400/80 text-sm mb-8 font-bold tracking-wide">HOŞGELDİN BALIM</p>
+                <div id="login-msg" class="msg-box"></div>
+                <form id="form-login" class="space-y-4">
+                    <input type="text" id="login-input" placeholder="Kullanıcı Adı / E-posta" class="input-field" required>
+                    <input type="password" id="login-password" placeholder="Şifre" class="input-field" required>
+                    <button type="submit" class="btn-primary">Giriş Yap</button>
+                </form>
+                <div class="mt-6 text-xs font-black text-gray-500 uppercase tracking-widest">Hesabın Yok Mu? <a href="#/register" class="text-blue-400 hover:underline">Kayıt Ol</a></div>
+            </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="view-register" class="page-section">
+            <div class="glass-card p-10 max-w-sm text-center">
+                <h1 class="text-3xl logo-text mb-6">YENİ HESAP</h1>
+                <div id="reg-msg" class="msg-box mb-4"></div>
+                <form id="form-register" class="space-y-4 text-left">
+                    <input type="text" id="reg-user" placeholder="Kullanıcı Adı" class="input-field" required>
+                    <input type="email" id="reg-email" placeholder="E-posta Adresi" class="input-field" required>
+                    <input type="password" id="reg-pass" placeholder="Şifre" class="input-field" required>
+                    <input type="password" id="reg-pass2" placeholder="Şifre Tekrar" class="input-field" required>
+                    <button type="submit" class="btn-primary bg-green-600 hover:bg-green-500">Kayıt Ol</button>
+                </form>
+                <div class="mt-6 text-xs font-black text-center text-gray-500 uppercase tracking-widest"><a href="#/login" class="text-blue-400 hover:underline">Girişe Dön</a></div>
+            </div>
+        </div>
+
+        <!-- PASSCODE -->
+        <div id="view-passcode" class="page-section">
+            <div class="glass-card p-12 max-w-sm text-center border-red-500/30">
+                <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse"></i>
+                <h2 class="text-xl font-black mb-6 uppercase text-red-400">ALİ ÇELİK ONAYI</h2>
+                <div id="pass-msg" class="msg-box mb-4"></div>
+                <form id="form-passcode">
+                    <input type="password" id="passcode-input" placeholder="GÜVENLİK KODU" class="input-field text-center font-mono tracking-[8px] text-xl" required>
+                    <button id="btn-passcode" type="submit" class="btn-primary mt-6 bg-red-700 hover:bg-red-600">DOĞRULA</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- HOME -->
+        <div id="view-home" class="page-section">
+            <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="md:col-span-1 space-y-6">
+                    <div class="glass-card !p-5 !rounded-2xl border-l-4 border-blue-500">
+                        <h3 class="text-[10px] font-black uppercase text-blue-400 mb-2 flex items-center gap-2"><i data-lucide="megaphone" class="w-3 h-3"></i> Duyurular</h3><p id="ann-text" class="text-xs text-gray-300 leading-relaxed">...</p>
+                    </div>
+                    <div class="glass-card !p-5 !rounded-2xl border-l-4 border-purple-500">
+                        <h3 class="text-[10px] font-black uppercase text-purple-400 mb-2 flex items-center gap-2"><i data-lucide="quote" class="w-3 h-3"></i> Günün Sözü</h3><p id="quote-text" class="text-xs text-gray-300 italic leading-relaxed">...</p>
+                    </div>
+                    <button id="admin-btn" onclick="window.location.hash='#/admin'" class="w-full py-3 bg-blue-900/30 text-blue-300 rounded-xl text-xs font-bold uppercase hidden border border-blue-500/20 hover:bg-blue-900/50 transition">Yönetim Paneli</button>
+                    <div id="su-panel" class="glass-card !p-5 !rounded-2xl hidden bg-red-900/10 border-red-500/30">
+                        <h3 class="text-[10px] font-black uppercase text-red-500 mb-4">Sistem Yönetimi</h3>
+                        <div id="sys-msg" class="msg-box mb-2"></div>
+                        <textarea id="sys-ann" class="input-field text-xs h-20 bg-black/40 mb-2 resize-none" placeholder="Duyuru..."></textarea>
+                        <input id="sys-quote" class="input-field text-xs bg-black/40 mb-3" placeholder="Söz...">
+                        <button onclick="window.saveSystemConfig()" class="btn-primary !py-3 text-[10px] bg-red-700 hover:bg-red-600">Güncelle</button>
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <div class="glass-card !p-6 !rounded-2xl mb-6">
+                        <input id="post-title" type="text" placeholder="Başlık..." class="input-field mb-3 bg-white/5 font-bold">
+                        <textarea id="post-content" placeholder="Neler düşünüyorsun balım?" class="input-field h-24 bg-white/5 resize-none"></textarea>
+                        <div class="flex justify-end mt-3"><button id="btn-post" onclick="window.createPost()" class="btn-primary !w-auto !px-8 !py-3 text-xs shadow-lg shadow-blue-900/50">Paylaş</button></div>
+                    </div>
+                    <div id="feed" class="space-y-4 pb-10"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST DETAIL -->
+        <div id="view-post-detail" class="page-section">
+            <div class="w-full max-w-3xl">
+                <button onclick="window.history.back()" class="mb-4 text-xs font-bold text-gray-500 hover:text-white uppercase flex items-center gap-1 transition"><i data-lucide="arrow-left" class="w-3 h-3"></i> Geri Dön</button>
+                <div id="post-detail-cont" class="glass-card !p-8 !rounded-3xl"></div>
+            </div>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="view-admin" class="page-section">
+            <div class="w-full max-w-5xl glass-card !p-8 !rounded-3xl">
+                <h2 class="text-xl font-black uppercase mb-6 flex items-center gap-2 text-blue-400"><i data-lucide="shield" class="w-6 h-6"></i> Yönetim Merkezi</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">Kullanıcı Listesi</h3>
+                        <div class="max-h-96 overflow-y-auto pr-2"><table class="w-full text-left text-xs"><tbody id="admin-users"></tbody></table></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">Talepler</h3>
+                        <div class="max-h-96 overflow-y-auto pr-2"><table class="w-full text-left text-xs"><tbody id="admin-reqs"></tbody></table></div>
+                    </div>
+                </div>
+                
+                <!-- BAN MENU -->
+                <div id="ban-modal" class="modal-overlay hidden">
+                    <div class="glass-card !p-6 max-w-sm w-full border-red-500/50">
+                        <h3 class="text-red-400 font-black uppercase mb-4">Kullanıcı Yasakla</h3><p id="ban-target-name" class="text-white mb-4 font-bold text-lg"></p><input type="hidden" id="ban-target-id">
+                        <div class="flex gap-2 mb-4"><select id="ban-type" class="input-field"><option value="min">Dakika</option><option value="hour">Saat</option><option value="day">Gün</option></select><input id="ban-val" type="number" value="1" class="input-field w-20 text-center"></div>
+                        <div class="flex gap-2"><button onclick="window.applyBan()" class="btn-primary bg-red-600 hover:bg-red-500">Onayla</button><button onclick="window.closeBanMenu()" class="btn-primary bg-gray-600 hover:bg-gray-500">İptal</button></div>
+                    </div>
+                </div>
+
+                <!-- INSPECT MENU -->
+                <div id="inspect-modal" class="modal-overlay hidden">
+                    <div class="glass-card !p-6 max-w-sm w-full border-blue-500/50">
+                        <h3 class="text-blue-400 font-black uppercase mb-4">Kullanıcı İncele</h3>
+                        <div class="space-y-2 mb-6 text-sm">
+                            <p class="text-gray-400">İsim: <span id="ins-name" class="text-white font-bold"></span></p>
+                            <p class="text-gray-400">E-posta: <span id="ins-mail" class="text-white font-bold"></span></p>
+                            <p class="text-gray-400">Ban Bitiş: <span id="ins-ban" class="text-red-400 font-bold"></span></p>
+                            <input type="hidden" id="ins-uid">
+                        </div>
+                        <h4 class="text-[10px] font-bold text-gray-500 uppercase mb-2">Bildirim Gönder</h4>
+                        <textarea id="ins-notif-msg" class="input-field h-20 mb-4 text-xs" placeholder="Mesajınız..."></textarea>
+                        <div class="flex gap-2"><button onclick="window.sendUserNotif()" class="btn-primary !py-3 text-xs bg-blue-600">Gönder</button><button onclick="window.closeInspect()" class="btn-primary !py-3 text-xs bg-gray-600">Kapat</button></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="view-profile" class="page-section">
+            <div class="glass-card !p-8 !rounded-3xl max-w-md w-full text-center">
+                <h2 class="text-xl font-black uppercase mb-6 text-white">Hesabım</h2>
+                <div class="bg-blue-900/20 p-6 rounded-2xl mb-8 border border-blue-500/20">
+                    <div id="prof-user" class="text-2xl font-black text-blue-400 mb-1">...</div>
+                    <div id="prof-email" class="text-sm text-gray-400">...</div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.location.hash='#/settings'" class="btn-primary flex items-center justify-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Hesap Ayarları</button>
+                    <button onclick="window.location.hash='#/home'" class="btn-primary bg-gray-700 hover:bg-gray-600 flex items-center justify-center gap-2"><i data-lucide="home" class="w-4 h-4"></i> Ana Sayfa</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="view-settings" class="page-section">
+             <div class="glass-card !p-8 !rounded-3xl max-w-md w-full">
+                <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+                    <h2 class="text-xl font-black uppercase text-white">Ayarlar</h2>
+                    <button onclick="window.history.back()" class="text-xs font-bold text-gray-500 hover:text-white">Geri</button>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">E-posta Değiştir (Talep)</label>
+                        <div id="mail-msg" class="msg-box"></div>
+                        <div class="flex flex-col gap-2 mt-1">
+                            <input id="mail-1" type="email" placeholder="Yeni E-posta" class="input-field !py-3 text-xs">
+                            <input id="mail-2" type="email" placeholder="Tekrar Gir" class="input-field !py-3 text-xs">
+                            <button onclick="window.reqEmail()" class="btn-primary !py-3 text-[10px] bg-purple-600 hover:bg-purple-500">Talep Et</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Kullanıcı Adı Değiştir</label>
+                        <div id="user-msg" class="msg-box"></div>
+                        <div class="flex gap-2 mt-1">
+                            <input id="user-1" type="text" placeholder="Yeni Kullanıcı Adı" class="input-field !py-3 text-xs">
+                            <button onclick="window.changeUsername()" class="btn-primary !w-auto !px-4 !py-3 text-[10px] bg-teal-600 hover:bg-teal-500">Değiştir</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Şifre Değiştir</label>
+                        <div id="pass-msg" class="msg-box"></div>
+                        <div class="flex flex-col gap-2 mt-1">
+                            <input id="pass-1" type="password" placeholder="Yeni Şifre (min 6)" class="input-field !py-3 text-xs">
+                            <input id="pass-2" type="password" placeholder="Tekrar Gir" class="input-field !py-3 text-xs">
+                            <button onclick="window.changePass()" class="btn-primary !py-3 text-[10px] bg-orange-600 hover:bg-orange-500">Değiştir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div id="view-notifications" class="page-section">
+            <div class="glass-card !p-8 !rounded-3xl max-w-lg w-full">
+                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                    <h2 class="text-xl font-black uppercase text-white">Bildirimler</h2>
+                    <button onclick="window.history.back()" class="text-xs text-gray-500 hover:text-white">Kapat</button>
+                </div>
+                <div id="notif-cont" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+
+
