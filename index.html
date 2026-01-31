@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>hizliyim.com - Final System</title>
+    <title>hizliyim.com - Final V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -23,12 +23,12 @@
             z-index: 10;
         }
 
-        /* Sayfa Yapısı - Varsayılan olarak hepsi gizli değil, JS yönetiyor */
+        /* Sayfa İçerikleri */
         .page-section {
-            display: none; /* JS ile açılacak */
+            display: none; 
             width: 100%; min-height: 100vh;
-            padding: 1rem;
-            padding-top: 5rem; /* Navbar payı */
+            padding: 1.5rem;
+            padding-top: 5rem; 
             animation: fadeIn 0.4s ease-out;
             justify-content: center;
         }
@@ -42,15 +42,14 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Glassmorphism Kart */
+        /* Kart Tasarımı */
         .glass-card { 
-            background: rgba(13, 17, 30, 0.95); backdrop-filter: blur(30px);
+            background: rgba(13, 17, 30, 0.96); backdrop-filter: blur(30px);
             border: 1px solid rgba(0, 102, 255, 0.15); border-top: 1px solid rgba(0, 102, 255, 0.3);
             border-radius: 24px; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
             width: 100%; position: relative; z-index: 20;
         }
 
-        /* Logo Efekti */
         .logo-text { 
             font-weight: 900; background: linear-gradient(to right, #fff, var(--brand-glow), #fff); 
             -webkit-background-clip: text; color: transparent; background-size: 200%; 
@@ -58,14 +57,12 @@
         }
         @keyframes shine { to { background-position: -200% center; } }
 
-        /* Inputlar */
         .input-field { 
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); 
             color: white; padding: 16px; border-radius: 16px; width: 100%; outline: none; transition: 0.3s; font-size: 0.95rem; 
         }
         .input-field:focus { border-color: var(--brand); box-shadow: 0 0 20px rgba(0, 102, 255, 0.2); background: rgba(0, 102, 255, 0.05); }
 
-        /* Butonlar */
         .btn-primary { 
             background: var(--brand); padding: 16px; border-radius: 16px; width: 100%; 
             font-weight: 800; text-transform: uppercase; letter-spacing: 1px; 
@@ -73,9 +70,8 @@
         }
         .btn-primary:active { transform: scale(0.98); }
         .btn-primary:hover:not(:disabled) { box-shadow: 0 0 30px rgba(0, 102, 255, 0.4); }
-        .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* Shine Efekti */
         .btn-primary::after { 
             content:''; position:absolute; top:0; left:-150%; width:100%; height:100%; 
             background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent); 
@@ -83,7 +79,6 @@
         }
         @keyframes btnShine { 0%{left:-150%} 20%{left:150%} 100%{left:150%} }
 
-        /* Hareketli Arka Plan */
         #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
         .particle { 
             position: absolute; border-radius: 50%; mix-blend-mode: screen; 
@@ -94,24 +89,23 @@
             100% { transform: translate(40px, -40px) scale(1.3); }
         }
 
-        /* Navbar - Z-Index Fix */
         .nav-fixed { 
             position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-            background: rgba(2, 4, 10, 0.9); backdrop-filter: blur(20px); 
+            background: rgba(2, 4, 10, 0.95); backdrop-filter: blur(20px); 
             border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.8rem 1rem; 
-            display: none; /* JS açacak */
+            display: none; 
         }
 
-        /* Mesaj Kutuları */
         .msg-box { 
             font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; text-align: center; 
             display: none; padding: 14px; border-radius: 12px; animation: slideDown 0.3s ease;
+            line-height: 1.4;
         }
         .msg-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
         .msg-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { to { transform: rotate(360deg); } }
 
         ::-webkit-scrollbar { width: 5px; }
@@ -133,13 +127,9 @@
             appId: "1:903963422468:web:936c368393585efd0cea51"
         };
 
-        let app, db, auth;
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-        } catch(e) { console.error("Firebase Hatası:", e); }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // CONFIG
         const SUPER_USER = "alicelik";
@@ -149,14 +139,15 @@
 
         // STATE
         let currentUserData = null;
-        let isAuthReady = false;
+        let authChecked = false;
+        let suFlow = false; // SuperUser login flow flag
 
         // --- GLOBAL ACTIONS ---
         window.handleLogout = async () => {
             await signOut(auth);
             localStorage.removeItem('lastAuthTimestamp');
             window.location.hash = '#/login';
-            window.location.reload(); // Temiz sayfa
+            window.location.reload(); 
         };
 
         window.formatDate = (ts) => {
@@ -166,35 +157,38 @@
 
         function showMsg(id, type, text) {
             const el = document.getElementById(id);
+            if(!el) return;
             el.className = `msg-box ${type === 'success' ? 'msg-success' : 'msg-error'}`;
-            el.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-4 h-4 inline"></i> ${text}` : `<i data-lucide="alert-circle" class="w-4 h-4 inline"></i> ${text}`;
+            el.innerHTML = type === 'success' ? `<i data-lucide="check-circle" class="w-4 h-4 inline"></i> ${text}` : `<i data-lucide="alert-triangle" class="w-4 h-4 inline"></i> ${text}`;
             el.style.display = 'block';
             if(window.lucide) window.lucide.createIcons();
-            // 3 saniye sonra kaybolsun
-            setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
+            // Ban mesajı uzun kalabilir, diğerleri 3sn
+            if(!text.includes('YASAK')) setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
         }
 
         async function logAction(type, uid, email) {
             try { await addDoc(collection(db, "logs"), { type, uid, email, ua: navigator.userAgent, ts: serverTimestamp() }); } catch(e){}
         }
 
-        // --- AUTH STATE & ROUTING ---
-        // Siyah ekranı önlemek için: onAuthStateChanged'i bekle, bu sırada sayfa boş ama siyah değil (arkaplan var).
+        // --- AUTH CHECKER ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
                     const snap = await getDoc(doc(db, "users", user.uid));
                     if(snap.exists()) {
                         const d = snap.data();
-                        if(d.bannedUntil && d.bannedUntil.toMillis() > Date.now()) {
+                        const now = Date.now();
+                        
+                        // BAN KONTROLÜ (Veritabanı)
+                        if(d.bannedUntil && d.bannedUntil.toMillis() > now) {
                             await signOut(auth);
-                            alert(`BANLANDIN BALIM! ${d.bannedUntil.toDate().toLocaleString()} tarihine kadar yasaklısın.`);
                             currentUserData = null;
+                            // Router will redirect to login, but we can't easily show msg here since page reloads logic.
+                            // The real ban check happens in LOGIN SUBMIT usually.
                         } else if(d.username === "DELETED_USER") {
-                            await signOut(auth); alert("Hesap silinmiş."); currentUserData = null;
+                            await signOut(auth); currentUserData = null;
                         } else {
                             currentUserData = d;
-                            // Last login update
                             updateDoc(doc(db, "users", user.uid), { lastLogin: serverTimestamp() });
                         }
                     } else if (user.email === SUPER_EMAIL) {
@@ -205,35 +199,32 @@
                 currentUserData = null;
             }
             
-            isAuthReady = true;
+            authChecked = true;
             renderRouter();
         });
 
-        // --- ROUTER LOGIC ---
+        // --- ROUTER ---
         function renderRouter() {
-            if(!isAuthReady) return; // Bekle
+            if(!authChecked) return; 
 
             let hash = window.location.hash.replace('#/', '').split('?')[0] || 'login';
             
             // GÜVENLİK
             if (!currentUserData) {
-                // Giriş yapmamışsa sadece bu sayfalara girebilir
-                if (!['login', 'register', 'passcode'].includes(hash)) {
+                // Giriş yapmamışsa
+                // Eğer SU Flow aktifse passcode sayfasına izin ver
+                if (hash === 'passcode' && suFlow) {
+                    // İzin ver
+                } else if (!['login', 'register'].includes(hash)) {
                     hash = 'login';
-                    // URL'i sessizce güncelle
                     window.history.replaceState(null, null, '#/login');
                 }
             } else {
-                // Giriş yapmışsa login sayfalarına giremez
+                // Giriş yapmışsa
                 if (['login', 'register', 'passcode'].includes(hash)) {
                     hash = 'home';
                     window.history.replaceState(null, null, '#/home');
                 }
-            }
-
-            // SuperUser Passcode Koruması
-            if (hash === 'passcode' && auth.currentUser?.email !== SUPER_EMAIL) {
-                hash = 'login'; window.history.replaceState(null, null, '#/login');
             }
 
             // NAVBAR
@@ -245,12 +236,11 @@
                 nav.style.display = 'none';
             }
 
-            // SAYFA DEĞİŞİMİ
+            // SAYFA GEÇİŞİ
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(`view-${hash}`);
             if(target) {
                 target.classList.add('active');
-                // Sayfa özel yüklemeler
                 if(hash === 'home') loadHome();
                 if(hash === 'admin') loadAdmin();
                 if(hash === 'post-detail') {
@@ -266,7 +256,7 @@
 
         window.addEventListener('hashchange', renderRouter);
 
-        // --- UI UPDATES ---
+        // --- UI FUNCTIONS ---
         function updateNavbar() {
             document.getElementById('nav-username').innerText = currentUserData.username;
             const badge = document.getElementById('nav-role');
@@ -345,17 +335,12 @@
         async function loadPostDetail(id) {
             const container = document.getElementById('post-detail-cont');
             container.innerHTML = '<div class="spinner mx-auto"></div>';
-            
             const snap = await getDoc(doc(db, "pages", id));
             if(!snap.exists()) { container.innerHTML = "Silinmiş."; return; }
             const p = snap.data();
-
             container.innerHTML = `
                 <h2 class="text-2xl font-black mb-2 break-words text-white">${p.title}</h2>
-                <div class="text-xs text-gray-500 mb-6 flex gap-4 uppercase font-bold">
-                    <span>${p.authorName}</span>
-                    <span>${window.formatDate(p.timestamp)}</span>
-                </div>
+                <div class="text-xs text-gray-500 mb-6 flex gap-4 uppercase font-bold"><span>${p.authorName}</span><span>${window.formatDate(p.timestamp)}</span></div>
                 <div class="bg-white/5 p-4 rounded-xl text-gray-200 whitespace-pre-wrap break-words mb-6 border border-white/10">${p.content}</div>
                 <div class="flex gap-2 mb-8">
                     <button onclick="window.vote('${id}', 'like')" class="flex-1 py-3 bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-xl font-bold flex justify-center gap-2 transition"><i data-lucide="thumbs-up" class="w-4 h-4"></i> Like (${p.likeCount||0})</button>
@@ -368,17 +353,11 @@
                     <button onclick="window.sendComment('${id}')" class="btn-primary !w-auto !px-4 bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </div>
             `;
-            
             const cSnap = await getDocs(query(collection(db, `pages/${id}/comments`), orderBy("timestamp", "asc")));
             const cList = document.getElementById(`comments-${id}`);
             cSnap.forEach(cd => {
                 const c = cd.data();
-                cList.innerHTML += `
-                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-                         <div class="flex justify-between text-[9px] text-gray-500 uppercase font-bold mb-1"><span>${c.authorName}</span><span>${window.formatDate(c.timestamp)}</span></div>
-                         <div class="text-sm text-gray-300 break-words">${c.text}</div>
-                    </div>
-                `;
+                cList.innerHTML += `<div class="bg-black/30 p-3 rounded-lg border border-white/5"><div class="flex justify-between text-[9px] text-gray-500 uppercase font-bold mb-1"><span>${c.authorName}</span><span>${window.formatDate(c.timestamp)}</span></div><div class="text-sm text-gray-300 break-words">${c.text}</div></div>`;
             });
             if(window.lucide) window.lucide.createIcons();
         }
@@ -393,12 +372,12 @@
                     <tr class="border-b border-white/5">
                         <td class="p-3">${u.username}</td>
                         <td class="p-3 text-[10px] uppercase font-bold ${u.role==='superuser'?'text-red-400':'text-blue-400'}">${u.role}</td>
-                        <td class="p-3 flex items-center gap-2">
+                        <td class="p-3">
                             ${(currentUserData.role==='superuser' || (currentUserData.role==='admin' && u.role==='user')) ? `
-                                <select id="ban-type-${d.id}" class="bg-black/40 text-[10px] rounded p-1"><option value="min">Dk</option><option value="hour">Saat</option><option value="day">Gün</option></select>
-                                <input id="ban-val-${d.id}" type="number" class="w-8 bg-black/40 text-[10px] rounded p-1" value="1">
-                                <button onclick="window.doBan('${d.id}')" class="text-red-400 bg-red-900/20 p-1 rounded"><i data-lucide="ban" class="w-3 h-3"></i></button>
-                                ${currentUserData.role==='superuser' ? `<button onclick="window.nukeUser('${d.id}')" class="text-red-600 bg-red-900/30 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
+                                <div class="flex gap-1">
+                                    <button onclick="window.openBanMenu('${d.id}', '${u.username}')" class="bg-red-900/30 text-red-400 p-2 rounded text-[10px] hover:bg-red-900/50">Yasakla</button>
+                                    ${currentUserData.role==='superuser' ? `<button onclick="window.nukeUser('${d.id}')" class="bg-red-950/50 text-red-600 p-2 rounded text-[10px] hover:bg-red-900"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
+                                </div>
                             ` : '-'}
                         </td>
                     </tr>
@@ -433,13 +412,7 @@
             if(snap.empty) { cont.innerHTML = '<div class="text-center text-gray-500">Bildirim yok balım.</div>'; return; }
             snap.forEach(d => {
                 const n = d.data();
-                cont.innerHTML += `
-                    <div class="bg-white/5 p-3 rounded-xl mb-2 border-l-2 ${n.read ? 'border-gray-600' : 'border-blue-500'}">
-                        <h4 class="font-bold text-sm">${n.title}</h4>
-                        <p class="text-xs text-gray-300 mt-1">${n.message}</p>
-                        <div class="text-[9px] text-gray-600 text-right mt-1">${window.formatDate(n.timestamp)}</div>
-                    </div>
-                `;
+                cont.innerHTML += `<div class="bg-white/5 p-3 rounded-xl mb-2 border-l-2 ${n.read ? 'border-gray-600' : 'border-blue-500'}"><h4 class="font-bold text-sm">${n.title}</h4><p class="text-xs text-gray-300 mt-1">${n.message}</p><div class="text-[9px] text-gray-600 text-right mt-1">${window.formatDate(n.timestamp)}</div></div>`;
                 updateDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${d.id}`), { read: true });
             });
             document.getElementById('notif-dot').classList.add('hidden');
@@ -451,7 +424,6 @@
         }
 
         // --- GLOBAL WINDOW FUNCTIONS ---
-        // Post
         window.createPost = async () => {
             const t = document.getElementById('post-title').value;
             const c = document.getElementById('post-content').value;
@@ -464,95 +436,85 @@
             } catch(e) { console.error(e); } finally { btn.disabled = false; }
         };
         window.deletePost = async (id) => { if(confirm("Silmek istediğine emin misin balım?")) { await deleteDoc(doc(db, "pages", id)); loadHome(); } };
-        
-        // System
         window.saveSystemConfig = async () => {
-            const a = document.getElementById('sys-ann').value;
-            const q = document.getElementById('sys-quote').value;
-            await setDoc(doc(db, "system", "config"), { announcement: a, quote: q }, {merge:true});
-            alert("Güncellendi balım! ✓"); loadHome();
+            const a = document.getElementById('sys-ann').value; const q = document.getElementById('sys-quote').value;
+            await setDoc(doc(db, "system", "config"), { announcement: a, quote: q }, {merge:true}); alert("Güncellendi! ✓"); loadHome();
         };
-
-        // Actions
         window.vote = async (pid, type) => {
-            const uid = auth.currentUser.uid;
-            const voteRef = doc(db, `pages/${pid}/votes/${uid}`);
-            const postRef = doc(db, "pages", pid);
-            try {
-                await runTransaction(db, async(t) => {
-                    const vDoc = await t.get(voteRef); const pDoc = await t.get(postRef);
-                    if(!pDoc.exists()) return;
-                    let l = pDoc.data().likeCount || 0; let d = pDoc.data().dislikeCount || 0;
-                    if(vDoc.exists()) { if(vDoc.data().type === type) return; if(vDoc.data().type === 'like') l--; else d--; }
-                    if(type === 'like') l++; else d++;
-                    t.set(voteRef, { type }); t.update(postRef, { likeCount: l, dislikeCount: d });
-                });
-                loadPostDetail(pid); 
-            } catch(e) { console.error(e); }
+            const uid = auth.currentUser.uid; const voteRef = doc(db, `pages/${pid}/votes/${uid}`); const postRef = doc(db, "pages", pid);
+            try { await runTransaction(db, async(t) => {
+                const vDoc = await t.get(voteRef); const pDoc = await t.get(postRef); if(!pDoc.exists()) return;
+                let l = pDoc.data().likeCount || 0; let d = pDoc.data().dislikeCount || 0;
+                if(vDoc.exists()) { if(vDoc.data().type === type) return; if(vDoc.data().type === 'like') l--; else d--; }
+                if(type === 'like') l++; else d++; t.set(voteRef, { type }); t.update(postRef, { likeCount: l, dislikeCount: d });
+            }); loadPostDetail(pid); } catch(e) { console.error(e); }
         };
-
         window.sendComment = async (pid) => {
-            const inp = document.getElementById(`cmt-${pid}`);
-            if(!inp.value.trim()) return;
+            const inp = document.getElementById(`cmt-${pid}`); if(!inp.value.trim()) return;
             await addDoc(collection(db, `pages/${pid}/comments`), { text: inp.value, authorName: currentUserData.username, timestamp: serverTimestamp() });
             inp.value = ''; loadPostDetail(pid);
         };
-
-        // Admin
-        window.doBan = async (uid) => {
-            const type = document.getElementById(`ban-type-${uid}`).value;
-            const val = parseInt(document.getElementById(`ban-val-${uid}`).value);
+        
+        // ADMIN BAN LOGIC
+        window.openBanMenu = (uid, username) => {
+            document.getElementById('ban-target-id').value = uid;
+            document.getElementById('ban-target-name').innerText = username;
+            document.getElementById('ban-modal').classList.remove('hidden');
+        };
+        window.closeBanMenu = () => document.getElementById('ban-modal').classList.add('hidden');
+        
+        window.applyBan = async () => {
+            const uid = document.getElementById('ban-target-id').value;
+            const type = document.getElementById('ban-type').value;
+            const val = parseInt(document.getElementById('ban-val').value);
             let ms = 0; if(type==='min') ms=val*60000; if(type==='hour') ms=val*3600000; if(type==='day') ms=val*86400000;
-            await updateDoc(doc(db, "users", uid), { bannedUntil: new Date(Date.now()+ms) });
-            alert("Banlandı!"); loadAdmin();
+            const bannedUntil = new Date(Date.now()+ms);
+            
+            await updateDoc(doc(db, "users", uid), { bannedUntil: bannedUntil });
+            alert(`${document.getElementById('ban-target-name').innerText} banlandı balım!`);
+            closeBanMenu(); loadAdmin();
         };
-        window.nukeUser = async (uid) => {
-            if(confirm("Kullanıcı tamamen silinecek?")) {
-                await setDoc(doc(db, "users", uid), { username: "DELETED_USER", email: "deleted", bannedUntil: new Date(2200, 0, 1) });
-                loadAdmin();
-            }
-        };
+
+        window.nukeUser = async (uid) => { if(confirm("Kullanıcı silinecek?")) { await setDoc(doc(db, "users", uid), { username: "DELETED_USER", email: "deleted", bannedUntil: new Date(2200, 0, 1) }); loadAdmin(); } };
         window.decideReq = async (rid, status, uid, mail) => {
             await updateDoc(doc(db, "requests", rid), { status });
             const msg = status === 'approved' ? `E-posta talebin ONAYLANDI. Yeni: ${mail}` : "E-posta talebin REDDEDİLDİ.";
-            await addDoc(collection(db, `users/${uid}/notifications`), { title: "Talep Sonucu", message: msg, read: false, timestamp: serverTimestamp() });
-            loadAdmin();
+            await addDoc(collection(db, `users/${uid}/notifications`), { title: "Talep Sonucu", message: msg, read: false, timestamp: serverTimestamp() }); loadAdmin();
         };
 
-        // Profile
+        // PROFILE ACTIONS
         window.reqEmail = async () => {
-            const m = document.getElementById('new-mail-input').value;
-            if(!m.includes('@')) return alert("Düzgün mail gir balım");
-            await addDoc(collection(db, "requests"), { userId: auth.currentUser.uid, username: currentUserData.username, oldEmail: currentUserData.email, newEmail: m, status: 'pending', timestamp: serverTimestamp() });
-            alert("Talep gönderildi.");
+            const m = document.getElementById('new-mail-input').value; if(!m.includes('@')) return alert("Mail hatalı");
+            await addDoc(collection(db, "requests"), { userId: auth.currentUser.uid, username: currentUserData.username, oldEmail: currentUserData.email, newEmail: m, status: 'pending', timestamp: serverTimestamp() }); alert("Talep gönderildi.");
         };
         window.changePass = async () => {
-             const p = document.getElementById('new-pass-input').value;
-             if(p.length < 6) return alert("En az 6 karakter");
+             const p = document.getElementById('new-pass-input').value; if(p.length < 6) return alert("Kısa şifre");
              try { await updatePassword(auth.currentUser, p); alert("Şifre değişti!"); } catch(e) { alert("Hata: Yeniden giriş yap."); }
         };
         window.changeUsername = async () => {
-            const u = document.getElementById('new-user-input').value.trim();
-            if(u.length < 4) return alert("Kısa");
+            const u = document.getElementById('new-user-input').value.trim(); if(u.length < 4) return alert("Kısa isim");
             const q = query(collection(db, "users"), where("username", "==", u));
-            const snap = await getDocs(q);
-            if(!snap.empty) return alert("İsim dolu!");
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { username: u });
-            currentUserData.username = u; alert("İsim değişti!"); loadProfile();
+            if(!(await getDocs(q)).empty) return alert("İsim dolu!");
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { username: u }); currentUserData.username = u; alert("İsim değişti!"); loadProfile();
         };
 
-        // --- DOM INIT ---
+        // --- EVENTS ---
         document.addEventListener('DOMContentLoaded', () => {
             // LOGIN
             document.getElementById('form-login').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = e.target.querySelector('button');
-                btn.innerHTML = '<div class="spinner !w-4 !h-4 !border-2"></div> İşleniyor...'; btn.disabled = true;
-                
                 const inp = document.getElementById('login-input').value.trim();
                 const pass = document.getElementById('login-password').value;
                 
-                if(inp === SUPER_USER && pass === SUPER_PASS) { window.location.hash = '#/passcode'; return; }
+                // SuperUser Flow - NO FIREBASE AUTH YET
+                if(inp === SUPER_USER && pass === SUPER_PASS) { 
+                    suFlow = true; // Kilit açıldı
+                    window.location.hash = '#/passcode'; 
+                    return; 
+                }
+
+                btn.innerHTML = '<div class="spinner !w-4 !h-4 !border-2"></div> İşleniyor...'; btn.disabled = true;
 
                 try {
                     let email = inp;
@@ -562,8 +524,23 @@
                         if(snap.empty) throw {code: 'auth/user-not-found'};
                         email = snap.docs[0].data().email;
                     }
-                    await signInWithEmailAndPassword(auth, email, pass);
-                    // Auth listener will handle route
+
+                    // Check ban before login success redirect (Login will succeed but we intercept)
+                    // Note: In client SDK we have to login to check firestore usually, or cloud function.
+                    // Here we login, check, then logout if banned.
+                    const userCred = await signInWithEmailAndPassword(auth, email, pass);
+                    const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                    
+                    if(userDoc.exists()) {
+                        const d = userDoc.data();
+                        if(d.bannedUntil && d.bannedUntil.toMillis() > Date.now()) {
+                            await signOut(auth);
+                            showMsg('login-msg', 'error', `BU HESAP ${d.bannedUntil.toDate().toLocaleString()} TARİHİNE KADAR YASAKLANMIŞTIR!`);
+                            btn.innerText = "Giriş Yap"; btn.disabled = false;
+                            return;
+                        }
+                    }
+                    // Auth listener handles success
                 } catch(err) { 
                     btn.innerText = "Giriş Yap"; btn.disabled = false;
                     showMsg('login-msg', 'error', "Hatalı bilgi balım!"); 
@@ -598,7 +575,7 @@
                     showMsg('reg-msg', 'success', "Kayıt Başarılı Balım, Yönlendiriliyorsun...");
                 } catch(err) { 
                     btn.innerText = "Kayıt Ol"; btn.disabled = false;
-                    showMsg('reg-msg', 'error', err.message); 
+                    showMsg('reg-msg', 'error', "Hata: " + err.code); 
                 }
             });
 
@@ -619,7 +596,7 @@
             for(let i=0; i<40; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
-                const s = Math.random()*150+20;
+                const s = Math.random()*120+20;
                 p.style.width=s+'px'; p.style.height=s+'px';
                 p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%';
                 const col = Math.random() > 0.5 ? '0, 102, 255' : '0, 194, 255';
@@ -744,15 +721,41 @@
             <div class="w-full max-w-5xl glass-card !p-8 !rounded-3xl">
                 <h2 class="text-xl font-black uppercase mb-6 flex items-center gap-2 text-blue-400"><i data-lucide="shield" class="w-6 h-6"></i> Yönetim Merkezi</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- USER LIST & BAN TRIGGER -->
                     <div>
-                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">Kullanıcılar & Ban</h3>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">Kullanıcı Listesi</h3>
                         <div class="max-h-96 overflow-y-auto pr-2"><table class="w-full text-left text-xs"><tbody id="admin-users"></tbody></table></div>
                     </div>
+
+                    <!-- REQUESTS -->
                     <div>
-                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">E-posta Talepleri</h3>
+                        <h3 class="text-xs font-black uppercase text-gray-500 mb-4 border-b border-white/10 pb-2">Talepler</h3>
                         <div class="max-h-96 overflow-y-auto pr-2"><table class="w-full text-left text-xs"><tbody id="admin-reqs"></tbody></table></div>
                     </div>
                 </div>
+                
+                <!-- BAN MENU OVERLAY (Inside Admin) -->
+                <div id="ban-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+                    <div class="glass-card !p-6 max-w-sm w-full border-red-500/50">
+                        <h3 class="text-red-400 font-black uppercase mb-4">Kullanıcı Yasakla</h3>
+                        <p id="ban-target-name" class="text-white mb-4 font-bold text-lg"></p>
+                        <input type="hidden" id="ban-target-id">
+                        <div class="flex gap-2 mb-4">
+                            <select id="ban-type" class="input-field">
+                                <option value="min">Dakika</option>
+                                <option value="hour">Saat</option>
+                                <option value="day">Gün</option>
+                            </select>
+                            <input id="ban-val" type="number" value="1" class="input-field w-20 text-center">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.applyBan()" class="btn-primary bg-red-600 hover:bg-red-500">Onayla</button>
+                            <button onclick="window.closeBanMenu()" class="btn-primary bg-gray-600 hover:bg-gray-500">İptal</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -765,7 +768,20 @@
                     <div id="prof-email" class="text-sm text-gray-400">...</div>
                 </div>
                 
-                <div class="space-y-4 text-left">
+                <button onclick="window.location.hash='#/settings'" class="btn-primary flex items-center justify-center gap-2">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Hesap Ayarları
+                </button>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="view-settings" class="page-section">
+             <div class="glass-card !p-8 !rounded-3xl max-w-md w-full">
+                <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+                    <h2 class="text-xl font-black uppercase text-white">Ayarlar</h2>
+                    <button onclick="window.history.back()" class="text-xs font-bold text-gray-500 hover:text-white">Geri</button>
+                </div>
+                <div class="space-y-6">
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">E-posta Değiştir (Talep)</label>
                         <div class="flex gap-2 mt-1">
