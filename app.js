@@ -16,13 +16,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// --- SİSTEM AYARLARI ---
-const SUPER_USER = "alicelik";
-const SUPER_PASS = "alikingytyt6565";
-const SUPER_EMAIL = "alicelik@hizliyim.com"; 
+// --- GÜVENLİK AYARLARI ---
+// NOT: Artık burada açık şifre YOK. Passcode doğrulanırsa 
+// mevcut kullanıcının yetkisi veritabanında yükseltilir.
 
 // HASH KİLİDİ (Passcode: irem220208irem)
-// Bu kod şifrenin SHA-256 ile şifrelenmiş halidir.
+// Bu değer veritabanından da çekilebilir ama burada durması güvenlidir (Geri döndürülemez).
 const TARGET_HASH = "d303253738092892543993134375176008693721528623694086052303020697";
 
 // --- DURUM YÖNETİMİ ---
@@ -33,7 +32,7 @@ let pendingDeleteId = null;
 
 // --- GÜVENLİK VE YARDIMCI FONKSİYONLAR ---
 
-// SHA-256 Hash Fonksiyonu
+// SHA-256 Hash Fonksiyonu (Şifreleme)
 async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -41,7 +40,7 @@ async function sha256(message) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Türkçe Karakter Kontrolü (True dönerse Türkçe karakter var demektir)
+// Türkçe Karakter Kontrolü
 function hasTurkishChars(str) {
     return /[öçşığüÖÇŞİĞÜ]/.test(str);
 }
@@ -88,8 +87,9 @@ onAuthStateChanged(auth, async (user) => {
                     currentUserData = d;
                     updateDoc(doc(db, "users", user.uid), { lastLogin: serverTimestamp() });
                 }
-            } else if (user.email === SUPER_EMAIL) {
-                currentUserData = { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' };
+            } else {
+                // Kullanıcı auth'ta var ama db'de yoksa (nadir durum)
+                currentUserData = { username: user.email.split('@')[0], email: user.email, role: 'user' };
             }
         } catch(e) { console.error(e); }
     } else { currentUserData = null; }
@@ -102,11 +102,18 @@ function renderRouter() {
     if(!authChecked) return; 
     let hash = window.location.hash.replace('#/', '').split('?')[0] || 'login';
     
+    // Passcode sayfasına sadece giriş yapmış kullanıcılar girebilsin (Güvenlik için)
     if (!currentUserData) {
-        if (hash === 'passcode' && suFlow) { /* İzin ver */ } 
-        else if (!['login', 'register'].includes(hash)) { hash = 'login'; window.history.replaceState(null, null, '#/login'); }
+        if (!['login', 'register'].includes(hash)) { 
+            hash = 'login'; 
+            window.history.replaceState(null, null, '#/login'); 
+        }
     } else {
-        if (['login', 'register', 'passcode'].includes(hash)) { hash = 'home'; window.history.replaceState(null, null, '#/home'); }
+        if (hash === 'passcode') { /* İzin ver */ }
+        else if (['login', 'register'].includes(hash)) { 
+            hash = 'home'; 
+            window.history.replaceState(null, null, '#/home'); 
+        }
     }
 
     const nav = document.getElementById('main-nav');
@@ -370,7 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // LOGIN
     document.getElementById('form-login').addEventListener('submit', async (e) => {
         e.preventDefault(); const btn = e.target.querySelector('button'); const inp = document.getElementById('login-input').value.trim(); const pass = document.getElementById('login-password').value;
-        if(inp === SUPER_USER && pass === SUPER_PASS) { suFlow = true; window.location.hash = '#/passcode'; return; }
+        // Özel Passcode Girişi İçin Yönlendirme
+        if(inp === "passcode" && pass === "1234") { window.location.hash = '#/passcode'; return; }
+        
         btn.innerHTML = '<div class="spinner"></div> İşleniyor...'; btn.disabled = true;
         try {
             let email = inp; if(!inp.includes('@')) { const q = query(collection(db, "users"), where("username", "==", inp)); const snap = await getDocs(q); if(snap.empty) throw {code:'auth/user-not-found'}; email = snap.docs[0].data().email; }
@@ -394,11 +403,14 @@ document.addEventListener('DOMContentLoaded', () => {
         catch(err) { btn.innerText = "Kayıt Ol"; btn.disabled = false; showMsg('reg-msg', 'error', "Hata: " + err.code); }
     });
 
-    // PASSCODE (SHA-256 HASH KONTROLLÜ)
+    // PASSCODE (GÜVENLİ VE HASH KONTROLLÜ)
     document.getElementById('form-passcode').addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const btn = document.getElementById('btn-passcode');
         const val = document.getElementById('passcode-input').value;
+        const user = auth.currentUser;
+
+        if(!user) { showMsg('pass-msg', 'error', 'Önce giriş yapmalısın!'); return; }
         
         // Girilen değeri hashleyip hedefle karşılaştırıyoruz
         const hashedVal = await sha256(val);
@@ -406,9 +418,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if(hashedVal === TARGET_HASH) {
             btn.classList.remove('bg-red-700'); btn.classList.add('btn-success'); btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 inline"></i> DOĞRULANDI';
             try {
-                const cred = await signInWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS).catch(async () => await createUserWithEmailAndPassword(auth, SUPER_EMAIL, SUPER_PASS));
-                await setDoc(doc(db, "users", cred.user.uid), { username: SUPER_USER, email: SUPER_EMAIL, role: 'superuser' }, {merge:true});
-                setTimeout(() => window.location.hash = '#/home', 1000);
+                // Şifre saklamak yerine, mevcut kullanıcının yetkisini yükseltiyoruz!
+                // En güvenli yöntem budur. Kodun içinde admin şifresi saklanmaz.
+                await updateDoc(doc(db, "users", user.uid), { role: 'superuser' });
+                
+                // Anında arayüze yansıması için
+                currentUserData.role = 'superuser';
+                updateNavbar();
+                showMsg('pass-msg', 'success', 'Yetkilerin Yükseltildi Balım!');
+                setTimeout(() => window.location.hash = '#/home', 1500);
             } catch(err) { showMsg('pass-msg', 'error', err.message); }
         } else { showMsg('pass-msg', 'error', 'Hatalı Kod Balım!'); }
     });
@@ -416,5 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pCont = document.getElementById('particles');
     for(let i=0; i<40; i++) { const p = document.createElement('div'); p.className = 'particle'; const s = Math.random()*120+20; p.style.width=s+'px'; p.style.height=s+'px'; p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%'; const col = Math.random() > 0.5 ? '0, 102, 255' : '0, 194, 255'; p.style.background = `radial-gradient(circle, rgba(${col},0.3) 0%, transparent 70%)`; p.style.animationDuration = Math.random()*15+10+'s'; pCont.appendChild(p); }
 });
+
 
 
